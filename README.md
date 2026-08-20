@@ -6,11 +6,11 @@
 ![React](https://img.shields.io/badge/React-18.x-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-8dff57?style=for-the-badge)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-Play_Serpent_Now-8dff57?style=for-the-badge&logo=vercel&logoColor=black)](https://snake-game-sage-pi.vercel.app)
 
 **A high-voltage, retro-futuristic Arcade Snake game with zero-latency mobile touch controls, unlockable skins, procedural audio synthesis, and interpolated 60/120 FPS canvas rendering.**
 
-[🎮 Play on Localhost](#-quick-start) • [✨ Key Features](#-features) • [🕹️ Controls](#-controls) • [🎨 Themes & Skins](#-skins--themes) • [🛠️ Tech Stack](#️-tech-stack)
+[🚀 **Play Live Game**](https://snake-game-sage-pi.vercel.app) • [🎮 Localhost Setup](#-quick-start) • [✨ Key Features](#-features) • [🕹️ Controls](#-controls) • [🎨 Themes & Skins](#-skins--themes)
 
 </div>
 
