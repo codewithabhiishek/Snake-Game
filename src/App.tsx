@@ -666,7 +666,7 @@ export default function App() {
                 SERPENT
               </div>
               <div className="text-[7px] sm:text-[8px] tracking-[0.2em] text-[#7fae92] font-semibold mt-0.5 whitespace-nowrap">
-                {activeTheme.name.toUpperCase()}
+                ARCADE
               </div>
             </div>
             <span
@@ -1111,7 +1111,7 @@ export default function App() {
                   SERPENT
                 </h1>
                 <p className="mt-0.5 text-[8px] sm:text-[10px] tracking-[0.25em] text-[#ffd166] font-semibold whitespace-nowrap">
-                  {activeTheme.name.toUpperCase()}
+                  {activeTheme.shortName} EDITION
                 </p>
               </div>
 
@@ -1171,7 +1171,7 @@ export default function App() {
 
               {/* Tab Content: Skins & Themes */}
               {menuTab === "skins" && (
-                <div className="grid grid-cols-2 gap-1.5 w-full max-w-sm">
+                <div className="grid grid-cols-2 gap-1.5 sm:gap-2 w-full max-w-xs sm:max-w-sm">
                   {THEMES.map((th) => {
                     const unlocked = isThemeUnlocked(th, maxLifetimeScore);
                     const sel = th.id === themeId;
@@ -1179,48 +1179,49 @@ export default function App() {
                       <button
                         key={th.id}
                         onClick={() => pickTheme(th.id)}
-                        className="rounded border sm:border-2 p-1.5 text-left transition-all relative flex flex-col justify-between cursor-pointer"
+                        className="rounded-md border sm:border-2 p-1.5 sm:p-2 text-left transition-all relative flex flex-col justify-between cursor-pointer"
                         style={{
-                          borderColor: sel ? th.palette.accent : unlocked ? "#245c3d" : "#1a2e23",
+                          borderColor: sel ? th.palette.accent : unlocked ? "#245c3d" : "#182a20",
                           background: sel
-                            ? `${th.palette.accent}20`
+                            ? `${th.palette.accent}22`
                             : unlocked
-                              ? "rgba(12,33,23,0.8)"
-                              : "rgba(6,16,11,0.7)",
+                              ? "rgba(12,33,23,0.85)"
+                              : "rgba(6,16,11,0.75)",
                           boxShadow: sel ? `0 0 14px ${th.palette.accentGlow}` : "none",
                           opacity: unlocked ? 1 : 0.65,
                         }}
                       >
-                        <div className="flex items-center justify-between gap-1">
+                        <div className="flex items-center justify-between gap-1 w-full">
                           <span
-                            className="font-display font-bold text-[10px] block leading-tight truncate"
+                            className="font-display font-bold text-[10px] sm:text-[11px] block leading-tight truncate"
                             style={{ color: sel ? th.palette.accentHot : unlocked ? "#d8ffe9" : "#7fae92" }}
                           >
                             {th.name}
                           </span>
-                          {!unlocked && (
-                            <span className="flex items-center gap-0.5 text-[8px] text-[#ffd166] shrink-0">
-                              <IconLock /> {th.tag}
-                            </span>
-                          )}
-                          {sel && (
+                          {sel ? (
                             <span
-                              className="text-[8px] font-bold px-1 rounded"
+                              className="text-[7px] sm:text-[8px] font-bold px-1.5 py-0.5 rounded leading-none shrink-0"
                               style={{ background: th.palette.accent, color: th.palette.bg }}
                             >
-                              EQUIPPED
+                              ACTIVE
                             </span>
-                          )}
+                          ) : !unlocked ? (
+                            <span className="flex items-center gap-0.5 text-[7px] sm:text-[8px] text-[#ffd166] shrink-0 font-semibold">
+                              <IconLock className="w-2.5 h-2.5" /> {th.tag}
+                            </span>
+                          ) : null}
                         </div>
 
-                        {/* Color Swatch Dots */}
-                        <div className="flex items-center gap-1 mt-1">
-                          <span className="w-2.5 h-2.5 rounded-full" style={{ background: th.palette.head }} />
-                          <span className="w-2.5 h-2.5 rounded-full" style={{ background: th.palette.mid }} />
-                          <span className="w-2.5 h-2.5 rounded-full" style={{ background: th.palette.tail }} />
-                          <span className="w-2.5 h-2.5 rounded-full" style={{ background: th.palette.foodGradMid }} />
-                          <span className="text-[7px] text-[#7fae92] ml-auto truncate">
-                            {unlocked ? th.tag : `Need ${th.unlockScore} pts`}
+                        {/* Color Swatch Dots & Status */}
+                        <div className="flex items-center justify-between gap-1 mt-1 pt-1 border-t border-[rgba(255,255,255,0.06)]">
+                          <div className="flex items-center gap-1 shrink-0">
+                            <span className="w-2 h-2 rounded-full border border-black/40" style={{ background: th.palette.head }} />
+                            <span className="w-2 h-2 rounded-full border border-black/40" style={{ background: th.palette.mid }} />
+                            <span className="w-2 h-2 rounded-full border border-black/40" style={{ background: th.palette.tail }} />
+                            <span className="w-2 h-2 rounded-full border border-black/40" style={{ background: th.palette.foodGradMid }} />
+                          </div>
+                          <span className="text-[7px] sm:text-[8px] text-[#7fae92] font-medium truncate text-right">
+                            {unlocked ? (sel ? "Equipped" : "Select") : `${th.unlockScore} pts`}
                           </span>
                         </div>
                       </button>
