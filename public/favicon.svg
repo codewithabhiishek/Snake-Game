@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <radialGradient id="bgGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#147a4b" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#06110c" stop-opacity="0.95" />
+    </radialGradient>
+    <linearGradient id="snakeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c0ff7a" />
+      <stop offset="50%" stop-color="#8dff57" />
+      <stop offset="100%" stop-color="#2fbf71" />
+    </linearGradient>
+    <filter id="neonGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2.5" result="glow" />
+      <feMerge>
+        <feMergeNode in="glow" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background rounded pill/tile -->
+  <rect width="64" height="64" rx="14" fill="#06110c" stroke="#245c3d" stroke-width="2" />
+  <rect width="64" height="64" rx="14" fill="url(#bgGlow)" />
+
+  <!-- Snake Body -->
+  <path
+    d="M 16 46 C 24 46 26 36 34 36 C 42 36 44 26 44 20 C 44 14 36 12 28 16"
+    stroke="url(#snakeGrad)"
+    stroke-width="7"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    filter="url(#neonGlow)"
+  />
+
+  <!-- Forked Red Tongue -->
+  <path
+    d="M 28 16 L 20 14 M 20 14 L 16 11 M 20 14 L 16 17"
+    stroke="#ff5d7a"
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <!-- Snake Head Bulb -->
+  <circle cx="28" cy="16" r="6" fill="#c0ff7a" filter="url(#neonGlow)" />
+
+  <!-- Snake Eye -->
+  <circle cx="26" cy="14.5" r="2.2" fill="#062513" />
+  <circle cx="25.4" cy="14" r="0.8" fill="#ffffff" />
+
+  <!-- Apple Accent -->
+  <circle cx="48" cy="46" r="5" fill="#ff5d5d" filter="url(#neonGlow)" />
+  <path d="M 48 41 Q 50 38 52 38" stroke="#8dff57" stroke-width="1.5" stroke-linecap="round" />
+</svg>
