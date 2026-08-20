@@ -146,6 +146,4 @@ Snake-Game/
 
 ## 👨‍💻 Creator
 
-Built with 🐍 by **[Abhishek](https://github.com/codewithabhiishek)**.
-
-> *Warning: Eating your own tail is not a valid life strategy.*
+Built by **[Abhishek](https://github.com/codewithabhiishek)** · **SERPENT ARCADE © 2026** ⚡

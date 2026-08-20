@@ -1082,9 +1082,9 @@ export default function App() {
             </div>
           )}
 
-          {/* Sarcastic Creator Credit */}
+          {/* Creator Credit */}
           <div className="mt-2.5 sm:mt-3 text-center text-xs sm:text-[13px] text-[#7fae92] opacity-90 select-none pb-1">
-            Built by <span className="text-[#c0ff7a] font-semibold">Abhishek</span> · <span className="italic opacity-90">Eating your own tail is not a valid life strategy 🐍</span>
+            Built by <span className="text-[#c0ff7a] font-semibold">Abhishek</span> · <span className="font-display text-[10px] sm:text-[11px] tracking-wider text-[#ffd166]">SERPENT ARCADE © 2026</span>
           </div>
         </footer>
       )}
