@@ -378,49 +378,15 @@ export default function App() {
 
   /* ------- zero-latency touch & tap gesture handling on screen ------- */
 
+  /* ------- zero-latency touch & swipe gesture handling ------- */
+
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    let sx = 0;
-    let sy = 0;
-    let active = false;
-
-    const handleInstantSteer = (clientX: number, clientY: number) => {
-      const g = gameRef.current;
-      if (g.status !== "playing") return;
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-
-      const r = canvas.getBoundingClientRect();
-      const head = g.snake[0] || { x: g.cols / 2, y: g.rows / 2 };
-      const headPxX = r.left + ((head.x + 0.5) / g.cols) * r.width;
-      const headPxY = r.top + ((head.y + 0.5) / g.rows) * r.height;
-
-      const tdx = clientX - headPxX;
-      const tdy = clientY - headPxY;
-
-      // If currently moving horizontally, tap above/below steers vertically
-      if (g.dir === "left" || g.dir === "right") {
-        if (Math.abs(tdy) > 8) {
-          api.current.steer(tdy > 0 ? "down" : "up");
-          return;
-        }
-      }
-      // If currently moving vertically, tap left/right steers horizontally
-      if (g.dir === "up" || g.dir === "down") {
-        if (Math.abs(tdx) > 8) {
-          api.current.steer(tdx > 0 ? "right" : "left");
-          return;
-        }
-      }
-
-      // General dominant axis
-      if (Math.abs(tdx) > Math.abs(tdy)) {
-        api.current.steer(tdx > 0 ? "right" : "left");
-      } else {
-        api.current.steer(tdy > 0 ? "down" : "up");
-      }
-    };
+    let startX = 0;
+    let startY = 0;
+    let startTime = 0;
+    let hasSwiped = false;
 
     const onStart = (e: TouchEvent) => {
       sfx.unlock();
@@ -428,50 +394,85 @@ export default function App() {
         e.preventDefault();
       }
       const t = e.touches[0];
-      sx = t.clientX;
-      sy = t.clientY;
-      active = true;
-
-      // Execute steer instantly on the first touch contact (0ms response)
-      handleInstantSteer(t.clientX, t.clientY);
+      startX = t.clientX;
+      startY = t.clientY;
+      startTime = performance.now();
+      hasSwiped = false;
     };
 
     const onMove = (e: TouchEvent) => {
-      if (!active) return;
+      if (e.touches.length === 0) return;
       if (gameRef.current.status === "playing" && e.cancelable) {
         e.preventDefault();
       }
       const t = e.touches[0];
-      const dx = t.clientX - sx;
-      const dy = t.clientY - sy;
-      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) return;
+      const dx = t.clientX - startX;
+      const dy = t.clientY - startY;
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
 
-      const g = gameRef.current;
-      if (g.dir === "left" || g.dir === "right") {
-        if (Math.abs(dy) >= 10) {
-          api.current.steer(dy > 0 ? "down" : "up");
-        } else if (Math.abs(dx) >= 10) {
-          api.current.steer(dx > 0 ? "right" : "left");
+      // 12px threshold for instantaneous, accurate directional swipe
+      if (absX < 12 && absY < 12) return;
+
+      if (absY > absX) {
+        // Pure vertical swipe
+        if (dy < 0) {
+          api.current.steer("up");
+        } else {
+          api.current.steer("down");
         }
       } else {
-        if (Math.abs(dx) >= 10) {
-          api.current.steer(dx > 0 ? "right" : "left");
-        } else if (Math.abs(dy) >= 10) {
-          api.current.steer(dy > 0 ? "down" : "up");
+        // Pure horizontal swipe
+        if (dx < 0) {
+          api.current.steer("left");
+        } else {
+          api.current.steer("right");
         }
       }
 
-      sx = t.clientX;
-      sy = t.clientY;
+      // Continuous tracking so you can snake-turn smoothly across the screen
+      startX = t.clientX;
+      startY = t.clientY;
+      hasSwiped = true;
     };
 
-    const onEnd = () => {
-      active = false;
+    const onEnd = (e: TouchEvent) => {
+      if (gameRef.current.status === "playing" && e.cancelable) {
+        e.preventDefault();
+      }
+      // If player tapped intentionally without dragging (quick tap < 280ms)
+      if (!hasSwiped && performance.now() - startTime < 280) {
+        const g = gameRef.current;
+        if (g.status === "playing") {
+          const canvas = canvasRef.current;
+          if (canvas) {
+            const r = canvas.getBoundingClientRect();
+            const head = g.snake[0] || { x: g.cols / 2, y: g.rows / 2 };
+            const headPxX = r.left + ((head.x + 0.5) / g.cols) * r.width;
+            const headPxY = r.top + ((head.y + 0.5) / g.rows) * r.height;
+
+            const tdx = startX - headPxX;
+            const tdy = startY - headPxY;
+
+            if (g.dir === "left" || g.dir === "right") {
+              api.current.steer(tdy > 0 ? "down" : "up");
+            } else if (g.dir === "up" || g.dir === "down") {
+              api.current.steer(tdx > 0 ? "right" : "left");
+            } else {
+              if (Math.abs(tdx) > Math.abs(tdy)) {
+                api.current.steer(tdx > 0 ? "right" : "left");
+              } else {
+                api.current.steer(tdy > 0 ? "down" : "up");
+              }
+            }
+          }
+        }
+      }
     };
 
     el.addEventListener("touchstart", onStart, { passive: false });
     el.addEventListener("touchmove", onMove, { passive: false });
-    el.addEventListener("touchend", onEnd, { passive: true });
+    el.addEventListener("touchend", onEnd, { passive: false });
     return () => {
       el.removeEventListener("touchstart", onStart);
       el.removeEventListener("touchmove", onMove);
