@@ -4,6 +4,7 @@ import {
   DIFFICULTIES,
   createGame,
   queueDir,
+  speedLevel,
   step,
   updateFx,
   type DifficultyId,
@@ -627,7 +628,7 @@ export default function App() {
   /* ------- derived ------- */
 
   const diff = getDiff(difficulty);
-  const speedLvl = Math.min(6, 1 + Math.floor(eaten / 4));
+  const speedLvl = speedLevel(eaten);
   const inRun = uiStatus === "playing" || uiStatus === "paused" || uiStatus === "dying";
   const showControls = forceTouchControls ?? false;
 

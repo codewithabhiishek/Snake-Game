@@ -321,6 +321,8 @@ export function updateFx(g: Game, dt: number) {
   }
 }
 
-export function speedLevel(g: Game): number {
-  return 1 + Math.floor(g.eaten / 4);
+export function speedLevel(g: Pick<Game, "eaten"> | number): number {
+  const eaten = typeof g === "number" ? g : g.eaten;
+  return Math.min(6, 1 + Math.floor(Math.max(0, eaten) / 4));
 }
+
