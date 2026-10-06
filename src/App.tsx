@@ -1381,19 +1381,43 @@ export default function App() {
   function renderOverlays() {
     if (gameMode === "duel") {
       if (duelState?.status === "round_over") {
+        const isTie = duelState.roundWinner === "tie";
+        const winnerName =
+          duelState.roundWinner === "p1"
+            ? duelPlayers[0]?.name || "PLAYER 1"
+            : duelPlayers[1]?.name || "PLAYER 2";
+        const winnerColor = duelState.roundWinner === "p1" ? "#8dff57" : "#ff2a85";
+
         return (
-          <div className="absolute inset-0 z-30 rounded-[6px] bg-[rgba(4,13,8,0.92)] overlay-in flex flex-col items-center justify-center p-4 text-center">
-            <h2 className="font-display font-bold text-2xl sm:text-3xl title-gold">
-              {duelState.roundWinner === "tie"
-                ? "ROUND DRAW!"
-                : `${duelState.roundWinner === "p1" ? duelPlayers[0]?.name || "PLAYER 1" : duelPlayers[1]?.name || "PLAYER 2"} WINS ROUND!`}
-            </h2>
-            <div className="mt-2 text-xs text-[#7fae92]">
-              Match Score: <span className="text-[#8dff57] font-bold">{duelState.wins.p1}</span> —{" "}
-              <span className="text-[#ff2a85] font-bold">{duelState.wins.p2}</span>
+          <div className="absolute inset-0 z-30 rounded-[6px] bg-[rgba(3,10,6,0.94)] backdrop-blur-md overlay-in flex flex-col items-center justify-center p-5 text-center">
+            <div className="p-1 px-3 rounded-full bg-[#0a2315] border border-[#1f5436] text-[10px] font-display tracking-widest text-[#ffd166] mb-3">
+              ROUND {duelState.round} OF {((duelState.targetWins || 3) * 2) - 1}
             </div>
-            <p className="mt-4 text-[10px] text-[#ffd166] blink-soft font-display">
-              NEXT ROUND COMMENCING...
+
+            <h2
+              className="font-display font-bold text-2xl sm:text-3xl tracking-wide uppercase drop-shadow-[0_0_15px_rgba(255,209,102,0.4)]"
+              style={{ color: isTie ? "#ffd166" : winnerColor }}
+            >
+              {isTie ? "ROUND DRAW!" : `👑 ${winnerName} WINS!`}
+            </h2>
+
+            {/* Score pill */}
+            <div className="mt-4 flex items-center gap-3 px-4 py-2 rounded-xl bg-[#06140c] border border-[#1d4c33] shadow-inner text-xs">
+              <div className="flex items-center gap-1.5 font-bold text-[#8dff57]">
+                <span className="w-2 h-2 rounded-full bg-[#8dff57] shadow-[0_0_6px_#8dff57]" />
+                <span>{duelPlayers[0]?.name || "P1"}</span>
+                <span className="font-display text-sm ml-1">{duelState.wins.p1}</span>
+              </div>
+              <span className="text-[#7fae92] font-display font-bold opacity-40">VS</span>
+              <div className="flex items-center gap-1.5 font-bold text-[#ff2a85]">
+                <span className="font-display text-sm mr-1">{duelState.wins.p2}</span>
+                <span>{duelPlayers[1]?.name || "P2"}</span>
+                <span className="w-2 h-2 rounded-full bg-[#ff2a85] shadow-[0_0_6px_#ff2a85]" />
+              </div>
+            </div>
+
+            <p className="mt-5 text-[10px] text-[#ffd166] blink-soft font-display tracking-widest">
+              ⚡ NEXT ROUND COMMENCING... ⚡
             </p>
           </div>
         );
@@ -1402,32 +1426,53 @@ export default function App() {
         const isWinner =
           (myRole === "host" && duelState.matchWinner === "p1") ||
           (myRole === "guest" && duelState.matchWinner === "p2");
+        const matchWinnerName =
+          duelState.matchWinner === "p1"
+            ? duelPlayers[0]?.name || "PLAYER 1"
+            : duelPlayers[1]?.name || "PLAYER 2";
+
         return (
-          <div className="absolute inset-0 z-30 rounded-[6px] bg-[rgba(4,13,8,0.94)] overlay-in flex flex-col items-center justify-center gap-3 p-4 text-center">
-            <h2 className={`font-display font-bold text-2xl sm:text-4xl ${isWinner ? "title-neon" : "title-coral"}`}>
-              {isWinner ? "🏆 VICTORY!" : "DEFEAT"}
+          <div className="absolute inset-0 z-30 rounded-[6px] bg-[rgba(3,10,6,0.96)] backdrop-blur-md overlay-in flex flex-col items-center justify-center gap-3 p-5 text-center">
+            <span className="text-4xl animate-bounce">
+              {isWinner ? "🏆" : "💀"}
+            </span>
+
+            <h2
+              className={`font-display font-bold text-3xl sm:text-4xl tracking-wider ${
+                isWinner ? "title-neon" : "title-coral"
+              }`}
+            >
+              {isWinner ? "MATCH VICTORY!" : "DEFEAT"}
             </h2>
-            <p className="text-xs text-[#d8ffe9] font-medium">
-              {duelState.matchWinner === "p1" ? duelPlayers[0]?.name || "Player 1" : duelPlayers[1]?.name || "Player 2"}{" "}
-              claims match victory!
+
+            <p className="text-xs text-[#d8ffe9] font-medium max-w-xs">
+              <span className="font-bold text-[#ffd166]">{matchWinnerName}</span> claims the championship!
             </p>
-            <div className="flex items-center gap-3 p-2 rounded bg-[#0b2015] border border-[#1e4a33] text-xs">
-              <span className="text-[#8dff57] font-bold">{duelPlayers[0]?.name || "P1"}: {duelState.wins.p1}</span>
-              <span className="opacity-30">vs</span>
-              <span className="text-[#ff2a85] font-bold">{duelPlayers[1]?.name || "P2"}: {duelState.wins.p2}</span>
+
+            <div className="flex items-center gap-4 px-4 py-2.5 rounded-xl bg-[#06140c] border border-[#1d4c33] text-xs my-1 shadow-lg">
+              <div className="flex items-center gap-1.5 font-bold text-[#8dff57]">
+                <span>{duelPlayers[0]?.name || "P1"}</span>
+                <span className="font-display text-sm">{duelState.wins.p1}</span>
+              </div>
+              <span className="text-[#7fae92] font-display opacity-40">VS</span>
+              <div className="flex items-center gap-1.5 font-bold text-[#ff2a85]">
+                <span className="font-display text-sm">{duelState.wins.p2}</span>
+                <span>{duelPlayers[1]?.name || "P2"}</span>
+              </div>
             </div>
-            <div className="flex items-center gap-2 mt-2">
+
+            <div className="flex items-center gap-3 mt-2">
               <button
                 onClick={handleRematchDuel}
-                className="btn-chunky rounded px-5 py-2 text-xs font-bold bg-[#8dff57] text-[#06110c] flex items-center gap-1.5 cursor-pointer"
+                className="btn-chunky rounded-lg px-5 py-2.5 text-xs font-bold bg-[#8dff57] text-[#06140c] border border-[#c0ff7a] shadow-[0_0_20px_rgba(141,255,87,0.35)] flex items-center gap-1.5 cursor-pointer hover:brightness-110 active:translate-y-0.5"
               >
-                <IconRestart className="w-3.5 h-3.5" /> REMATCH
+                <IconRestart className="w-3.5 h-3.5" /> PLAY REMATCH
               </button>
               <button
                 onClick={handleExitDuel}
-                className="btn-ghost rounded px-4 py-2 text-xs text-[#d8ffe9] flex items-center gap-1.5 cursor-pointer"
+                className="btn-ghost rounded-lg px-4 py-2.5 text-xs text-[#d8ffe9] border border-[#1e4a33] flex items-center gap-1.5 cursor-pointer hover:bg-[#122e20]"
               >
-                <IconHome className="w-3.5 h-3.5" /> MENU
+                <IconHome className="w-3.5 h-3.5" /> MAIN MENU
               </button>
             </div>
           </div>
