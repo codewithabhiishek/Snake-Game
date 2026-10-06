@@ -53,6 +53,12 @@
   - Zero external MP3/WAV audio assets needed. Real-time synthesized chiptune tones for eating, turns, pause, deaths, and high score celebrations.
   - Mobile audio auto-unlock on first user interaction.
 
+- **⚔️ 1v1 Arena Duel — Play with Friends (P2P WebRTC):**
+  - **Zero Server Costs & 100% Serverless:** Direct browser-to-browser WebRTC DataChannel via PeerJS and public Google/Twilio STUN servers. No external game servers or databases needed.
+  - **Instant 1-Click Lobby:** Host generates a 4-letter room code (e.g. `X7K2`), a 1-click shareable invite link (`?room=X7K2`), and an interactive QR code to scan with a phone camera.
+  - **Real-Time Shared Arena Battle:** Both players slither simultaneously on the same 21×21 board (P1 Lime vs P2 Neon Pink), racing for 2 shared apples and trying to cut each other off.
+  - **Authoritative Rules:** Wall collisions, self-collisions, enemy-body crashes, and head-on ties. Best-of-5 rounds format with an instant rematch button.
+
 - **💾 Local Persistence & Best Score Tracker:**
   - Saves your best scores and theme unlock progress in `localStorage`.
   - Zero third-party tracker bloat, zero secret leaks.
@@ -103,7 +109,14 @@ SERPENT includes a Node.js test suite covering engine physics, collision detecti
 npm test
 ```
 
-### Verified Test Cases (16/16 Passing):
+### Verified Test Cases (23/23 Passing):
+- ✔ `DuelEngine` initializes two snakes facing opposite directions with 2 food items.
+- ✔ `DuelEngine` rejects 180° reversals and buffers up to 2 distinct turns per player.
+- ✔ `DuelEngine` detects simultaneous head-on collision and rules a tie.
+- ✔ `DuelEngine` awards round victory to opponent on wall collisions.
+- ✔ `DuelEngine` awards round victory when a snake crashes into opponent's body.
+- ✔ `DuelEngine` handles apple consumption, snake growth, and free-cell food respawning.
+- ✔ `DuelEngine` transitions to `match_over` upon reaching target wins (Best of 5).
 - ✔ `createGame` initializes grid dimensions, starting snake, and non-overlapping food.
 - ✔ `queueDir` permits valid 90° turns and rejects 180° instant reversals.
 - ✔ Input queue buffers up to 2 distinct turns without input lag.

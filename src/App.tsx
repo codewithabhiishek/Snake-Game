@@ -15,6 +15,16 @@ import {
 import { draw } from "./game/render";
 import { sfx } from "./game/audio";
 import { THEMES, getTheme, isThemeUnlocked, type ThemeId } from "./game/themes";
+import { DuelEngine } from "./game/multiplayer/duelEngine";
+import { drawDuel } from "./game/multiplayer/duelRender";
+import {
+  DuelHostBridge,
+  randomDuelCode,
+  tryDuelGuestLink,
+  type DuelGuestLink,
+} from "./game/multiplayer/peerTransport";
+import type { DuelGameState, RoomPlayer } from "./game/multiplayer/types";
+import { MultiplayerModal } from "./components/MultiplayerModal";
 
 /* ---------------- inline SVG icons ---------------- */
 
@@ -199,6 +209,38 @@ export default function App() {
   // Maximum lifetime best score across all difficulties to check unlocks
   const maxLifetimeScore = Math.max(loadBest("chill"), loadBest("classic"), loadBest("insane"), best);
 
+  // Multiplayer Duel State
+  const [gameMode, setGameMode] = useState<"solo" | "duel">("solo");
+  const [isMultiplayerOpen, setIsMultiplayerOpen] = useState(false);
+  const [initialRoomCode, setInitialRoomCode] = useState("");
+  const [hostRoomCode, setHostRoomCode] = useState<string | null>(null);
+  const [guestConnected, setGuestConnected] = useState(false);
+  const [guestName, setGuestName] = useState("");
+  const [isConnecting, setIsConnecting] = useState(false);
+  const [connectionError, setConnectionError] = useState<string | null>(null);
+  const [myRole, setMyRole] = useState<"host" | "guest" | null>(null);
+  const [duelState, setDuelState] = useState<DuelGameState | null>(null);
+  const [duelPlayers, setDuelPlayers] = useState<RoomPlayer[]>([]);
+
+  const duelEngineRef = useRef<DuelEngine | null>(null);
+  const duelHostBridgeRef = useRef<DuelHostBridge | null>(null);
+  const duelGuestLinkRef = useRef<DuelGuestLink | null>(null);
+  const gameModeRef = useRef<"solo" | "duel">("solo");
+  const myRoleRef = useRef<"host" | "guest" | null>(null);
+  gameModeRef.current = gameMode;
+  myRoleRef.current = myRole;
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const room = params.get("room");
+      if (room && room.trim().length >= 4) {
+        setInitialRoomCode(room.trim().toUpperCase().slice(0, 4));
+        setIsMultiplayerOpen(true);
+      }
+    }
+  }, []);
+
   /* ------- actions ------- */
 
   const startRun = useCallback((id?: DifficultyId) => {
@@ -248,16 +290,140 @@ export default function App() {
   }, [startRun, togglePause]);
 
   const steer = useCallback((d: Dir) => {
-    const g = gameRef.current;
-    if (g.status !== "playing") return;
     sfx.unlock();
-    queueDir(g, d);
     if ("vibrate" in navigator) {
       try {
         navigator.vibrate(10);
       } catch {
         /* ignore */
       }
+    }
+
+    if (gameModeRef.current === "duel") {
+      if (myRoleRef.current === "host") {
+        duelEngineRef.current?.queueTurn("p1", d);
+      } else if (myRoleRef.current === "guest") {
+        duelGuestLinkRef.current?.send({ type: "steer", dir: d });
+      }
+      return;
+    }
+
+    const g = gameRef.current;
+    if (g.status !== "playing") return;
+    queueDir(g, d);
+  }, []);
+
+  const handleHostRoom = useCallback((name: string, pThemeId: ThemeId) => {
+    if (duelHostBridgeRef.current) {
+      duelHostBridgeRef.current.close();
+    }
+    const code = randomDuelCode();
+    setHostRoomCode(code);
+    setMyRole("host");
+    myRoleRef.current = "host";
+
+    const hostPlayer: RoomPlayer = {
+      id: "p1",
+      name: name || "Host",
+      themeId: pThemeId,
+      ready: true,
+      score: 0,
+      connected: true,
+    };
+
+    const engine = new DuelEngine(hostPlayer, undefined, {
+      onStateChange: (st, pl) => {
+        setDuelState({ ...st });
+        setDuelPlayers([...pl]);
+        const guest = pl.find((p) => p.id === "p2");
+        setGuestConnected(guest?.connected ?? false);
+        setGuestName(guest?.name ?? "");
+        duelHostBridgeRef.current?.broadcast({
+          type: "state_sync",
+          state: st,
+          players: pl,
+        });
+      },
+      onSfx: (name) => {
+        sfx.play(name);
+        duelHostBridgeRef.current?.broadcast({ type: "sfx", name });
+      },
+    });
+
+    duelEngineRef.current = engine;
+    duelHostBridgeRef.current = new DuelHostBridge(engine, code);
+    setDuelState({ ...engine.state });
+    setDuelPlayers(Object.values(engine.players));
+  }, []);
+
+  const handleStartDuel = useCallback(() => {
+    if (!duelEngineRef.current) return;
+    setIsMultiplayerOpen(false);
+    setGameMode("duel");
+    gameModeRef.current = "duel";
+    duelEngineRef.current.startMatch();
+  }, []);
+
+  const handleJoinRoom = useCallback(async (code: string, name: string, pThemeId: ThemeId) => {
+    setIsConnecting(true);
+    setConnectionError(null);
+    try {
+      if (duelGuestLinkRef.current) {
+        duelGuestLinkRef.current.close();
+      }
+      const link = await tryDuelGuestLink(code);
+      duelGuestLinkRef.current = link;
+      setMyRole("guest");
+      myRoleRef.current = "guest";
+      setGameMode("duel");
+      gameModeRef.current = "duel";
+      setIsMultiplayerOpen(false);
+
+      link.send({ type: "join", name: name || "Player 2", themeId: pThemeId });
+
+      link.onMessage((msg) => {
+        if (msg.type === "state_sync") {
+          setDuelState({ ...msg.state });
+          setDuelPlayers([...msg.players]);
+        } else if (msg.type === "sfx") {
+          sfx.play(msg.name);
+        } else if (msg.type === "player_left") {
+          setConnectionError("Host disconnected.");
+        }
+      });
+    } catch (err: unknown) {
+      setConnectionError(err instanceof Error ? err.message : "Failed to connect to room.");
+    } finally {
+      setIsConnecting(false);
+    }
+  }, []);
+
+  const handleExitDuel = useCallback(() => {
+    if (duelHostBridgeRef.current) {
+      duelHostBridgeRef.current.close();
+      duelHostBridgeRef.current = null;
+    }
+    if (duelGuestLinkRef.current) {
+      duelGuestLinkRef.current.send({ type: "leave" });
+      duelGuestLinkRef.current.close();
+      duelGuestLinkRef.current = null;
+    }
+    duelEngineRef.current = null;
+    setGameMode("solo");
+    gameModeRef.current = "solo";
+    setMyRole(null);
+    myRoleRef.current = null;
+    setDuelState(null);
+    setHostRoomCode(null);
+    setGuestConnected(false);
+    toMenu();
+  }, [toMenu]);
+
+  const handleRematchDuel = useCallback(() => {
+    if (myRoleRef.current === "host") {
+      duelEngineRef.current?.rematch();
+    } else if (myRoleRef.current === "guest") {
+      duelGuestLinkRef.current?.send({ type: "rematch" });
     }
   }, []);
 
@@ -550,6 +716,49 @@ export default function App() {
       raf = requestAnimationFrame(frame);
       const dt = Math.min(0.1, (now - last) / 1000);
       last = now;
+
+      // MULTIPLAYER DUEL SIMULATION & RENDER
+      if (gameModeRef.current === "duel") {
+        if (myRoleRef.current === "host" && duelEngineRef.current) {
+          duelEngineRef.current.update(dt);
+        }
+        const canvas = canvasRef.current;
+        if (canvas && sizeRef.current > 0) {
+          const ctx = canvas.getContext("2d");
+          if (ctx) {
+            if (myRoleRef.current === "host" && duelEngineRef.current) {
+              const curState = duelEngineRef.current.state;
+              const p1 = duelEngineRef.current.players.p1;
+              const p2 = duelEngineRef.current.players.p2;
+              drawDuel(
+                ctx,
+                curState,
+                sizeRef.current,
+                dprRef.current,
+                duelEngineRef.current.particles,
+                duelEngineRef.current.shake,
+                getTheme(p1.themeId),
+                getTheme(p2.themeId)
+              );
+            } else if (duelState) {
+              const p1 = duelPlayers.find((p) => p.id === "p1");
+              const p2 = duelPlayers.find((p) => p.id === "p2");
+              drawDuel(
+                ctx,
+                duelState,
+                sizeRef.current,
+                dprRef.current,
+                [],
+                0,
+                getTheme(p1?.themeId ?? "cyberpunk"),
+                getTheme(p2?.themeId ?? "synthwave")
+              );
+            }
+          }
+        }
+        return;
+      }
+
       const g = gameRef.current;
 
       if (g.status === "playing") {
@@ -662,27 +871,80 @@ export default function App() {
       {/* ---------- HUD ---------- */}
       {!isLandscapeMobile && (
         <header className="relative z-20 shrink-0 flex items-center justify-between gap-1 sm:gap-3 px-2.5 sm:px-6 pt-2 sm:pt-3 pb-1.5 sm:pb-2">
-          <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
-            <SnakeMark className="w-6 h-6 sm:w-8 sm:h-8 md:w-9 md:h-9 shrink-0" color={activeTheme.palette.accent} />
-            <div className="hidden xs:block min-w-0">
-              <div
-                className="font-display font-bold text-xs sm:text-base md:text-lg leading-none truncate"
-                style={{ color: activeTheme.palette.accentHot, textShadow: `0 0 12px ${activeTheme.palette.accentGlow}` }}
+          {gameMode === "duel" ? (
+            <div className="flex items-center justify-between w-full">
+              {/* P1 Host Info */}
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-[#8dff57] shadow-[0_0_8px_#8dff57]" />
+                <div className="flex flex-col">
+                  <span className="font-bold text-xs text-[#8dff57] truncate max-w-[90px] sm:max-w-[130px]">
+                    {duelPlayers[0]?.name || "P1 (Host)"}
+                  </span>
+                  <div className="flex items-center gap-1 text-[10px]">
+                    <span className="text-[#ffd166] font-display font-bold">WINS: {duelState?.wins.p1 || 0}</span>
+                    <span className="opacity-40">·</span>
+                    <span className="text-[#7fae92]">🍎 {duelState?.snakes.p1.applesEaten || 0}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Center Match Status */}
+              <div className="flex flex-col items-center">
+                <span className="font-display font-bold text-xs sm:text-sm text-[#ffd166] tracking-widest">
+                  ROUND {duelState?.round || 1}
+                </span>
+                <span className="text-[8px] text-[#7fae92] uppercase tracking-wider font-semibold">
+                  BEST OF {((duelState?.targetWins || 3) * 2) - 1}
+                </span>
+              </div>
+
+              {/* P2 Guest Info */}
+              <div className="flex items-center gap-2">
+                <div className="flex flex-col items-end">
+                  <span className="font-bold text-xs text-[#ff2a85] truncate max-w-[90px] sm:max-w-[130px]">
+                    {duelPlayers[1]?.name || "P2 (Guest)"}
+                  </span>
+                  <div className="flex items-center gap-1 text-[10px]">
+                    <span className="text-[#7fae92]">🍎 {duelState?.snakes.p2.applesEaten || 0}</span>
+                    <span className="opacity-40">·</span>
+                    <span className="text-[#ffd166] font-display font-bold">WINS: {duelState?.wins.p2 || 0}</span>
+                  </div>
+                </div>
+                <span className="w-3 h-3 rounded-full bg-[#ff2a85] shadow-[0_0_8px_#ff2a85]" />
+              </div>
+
+              {/* Exit Duel button */}
+              <button
+                onClick={handleExitDuel}
+                className="btn-ghost rounded px-2.5 py-1 text-[10px] text-[#ff5d5d] hover:bg-[#ff5d5d]/10 ml-2 cursor-pointer"
+                title="Exit 1v1 Duel to Solo Menu"
               >
-                SERPENT
-              </div>
-              <div className="text-[7px] sm:text-[8px] tracking-[0.2em] text-[#7fae92] font-semibold mt-0.5 whitespace-nowrap">
-                ARCADE
-              </div>
+                LEAVE
+              </button>
             </div>
-            <span
-              className="font-display text-[8px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded border bg-[rgba(12,33,23,0.85)] shrink-0"
-              style={{ borderColor: `${diff.hue}66`, color: diff.hue }}
-              title={diff.tagline}
-            >
-              {diff.label}
-            </span>
-          </div>
+          ) : (
+            <>
+              <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
+                <SnakeMark className="w-6 h-6 sm:w-8 sm:h-8 md:w-9 md:h-9 shrink-0" color={activeTheme.palette.accent} />
+                <div className="hidden xs:block min-w-0">
+                  <div
+                    className="font-display font-bold text-xs sm:text-base md:text-lg leading-none truncate"
+                    style={{ color: activeTheme.palette.accentHot, textShadow: `0 0 12px ${activeTheme.palette.accentGlow}` }}
+                  >
+                    SERPENT
+                  </div>
+                  <div className="text-[7px] sm:text-[8px] tracking-[0.2em] text-[#7fae92] font-semibold mt-0.5 whitespace-nowrap">
+                    ARCADE
+                  </div>
+                </div>
+                <span
+                  className="font-display text-[8px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded border bg-[rgba(12,33,23,0.85)] shrink-0"
+                  style={{ borderColor: `${diff.hue}66`, color: diff.hue }}
+                  title={diff.tagline}
+                >
+                  {diff.label}
+                </span>
+              </div>
 
           <div className="flex items-center gap-1 sm:gap-2 md:gap-3">
             {/* speed meter (desktop/tablet) */}
@@ -765,8 +1027,10 @@ export default function App() {
               {isFullscreen ? <IconMinimize className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : <IconMaximize className="w-3.5 h-3.5 sm:w-4 sm:h-4" />}
             </button>
           </div>
-        </header>
+        </>
       )}
+    </header>
+  )}
 
       {/* ---------- MAIN BOARD CONTAINER ---------- */}
       <main className="relative z-10 flex-1 min-h-0 flex items-center justify-center p-1 sm:p-3 md:p-4">
@@ -1094,11 +1358,84 @@ export default function App() {
           </div>
         </footer>
       )}
+
+      {/* Multiplayer Modal */}
+      <MultiplayerModal
+        isOpen={isMultiplayerOpen}
+        onClose={() => setIsMultiplayerOpen(false)}
+        onHostRoom={handleHostRoom}
+        onJoinRoom={handleJoinRoom}
+        initialRoomCode={initialRoomCode}
+        themeId={themeId}
+        hostRoomCode={hostRoomCode}
+        guestConnected={guestConnected}
+        guestName={guestName}
+        isConnecting={isConnecting}
+        connectionError={connectionError}
+        onStartDuel={handleStartDuel}
+      />
     </div>
   );
 
   /* Helper to render Menu / Paused / Game Over overlays */
   function renderOverlays() {
+    if (gameMode === "duel") {
+      if (duelState?.status === "round_over") {
+        return (
+          <div className="absolute inset-0 z-30 rounded-[6px] bg-[rgba(4,13,8,0.92)] overlay-in flex flex-col items-center justify-center p-4 text-center">
+            <h2 className="font-display font-bold text-2xl sm:text-3xl title-gold">
+              {duelState.roundWinner === "tie"
+                ? "ROUND DRAW!"
+                : `${duelState.roundWinner === "p1" ? duelPlayers[0]?.name || "PLAYER 1" : duelPlayers[1]?.name || "PLAYER 2"} WINS ROUND!`}
+            </h2>
+            <div className="mt-2 text-xs text-[#7fae92]">
+              Match Score: <span className="text-[#8dff57] font-bold">{duelState.wins.p1}</span> —{" "}
+              <span className="text-[#ff2a85] font-bold">{duelState.wins.p2}</span>
+            </div>
+            <p className="mt-4 text-[10px] text-[#ffd166] blink-soft font-display">
+              NEXT ROUND COMMENCING...
+            </p>
+          </div>
+        );
+      }
+      if (duelState?.status === "match_over") {
+        const isWinner =
+          (myRole === "host" && duelState.matchWinner === "p1") ||
+          (myRole === "guest" && duelState.matchWinner === "p2");
+        return (
+          <div className="absolute inset-0 z-30 rounded-[6px] bg-[rgba(4,13,8,0.94)] overlay-in flex flex-col items-center justify-center gap-3 p-4 text-center">
+            <h2 className={`font-display font-bold text-2xl sm:text-4xl ${isWinner ? "title-neon" : "title-coral"}`}>
+              {isWinner ? "🏆 VICTORY!" : "DEFEAT"}
+            </h2>
+            <p className="text-xs text-[#d8ffe9] font-medium">
+              {duelState.matchWinner === "p1" ? duelPlayers[0]?.name || "Player 1" : duelPlayers[1]?.name || "Player 2"}{" "}
+              claims match victory!
+            </p>
+            <div className="flex items-center gap-3 p-2 rounded bg-[#0b2015] border border-[#1e4a33] text-xs">
+              <span className="text-[#8dff57] font-bold">{duelPlayers[0]?.name || "P1"}: {duelState.wins.p1}</span>
+              <span className="opacity-30">vs</span>
+              <span className="text-[#ff2a85] font-bold">{duelPlayers[1]?.name || "P2"}: {duelState.wins.p2}</span>
+            </div>
+            <div className="flex items-center gap-2 mt-2">
+              <button
+                onClick={handleRematchDuel}
+                className="btn-chunky rounded px-5 py-2 text-xs font-bold bg-[#8dff57] text-[#06110c] flex items-center gap-1.5 cursor-pointer"
+              >
+                <IconRestart className="w-3.5 h-3.5" /> REMATCH
+              </button>
+              <button
+                onClick={handleExitDuel}
+                className="btn-ghost rounded px-4 py-2 text-xs text-[#d8ffe9] flex items-center gap-1.5 cursor-pointer"
+              >
+                <IconHome className="w-3.5 h-3.5" /> MENU
+              </button>
+            </div>
+          </div>
+        );
+      }
+      return null;
+    }
+
     return (
       <>
         {/* ---- MENU ---- */}
@@ -1244,17 +1581,25 @@ export default function App() {
                 <span className="font-display font-bold text-sm sm:text-base glow-gold">{best}</span>
               </div>
 
-              <button
-                onClick={() => startRun()}
-                className="btn-chunky rounded-md px-6 sm:px-9 py-2.5 sm:py-3 text-xs sm:text-sm font-bold flex items-center gap-2 cursor-pointer"
-                style={{
-                  background: activeTheme.palette.accent,
-                  color: activeTheme.palette.bg,
-                  borderColor: activeTheme.palette.accentHot,
-                }}
-              >
-                <IconPlay className="w-3.5 h-3.5" /> START RUN
-              </button>
+              <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3 w-full max-w-xs justify-center">
+                <button
+                  onClick={() => startRun()}
+                  className="btn-chunky rounded-md px-5 py-2.5 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto"
+                  style={{
+                    background: activeTheme.palette.accent,
+                    color: activeTheme.palette.bg,
+                    borderColor: activeTheme.palette.accentHot,
+                  }}
+                >
+                  <IconPlay className="w-3.5 h-3.5" /> SOLO RUN
+                </button>
+                <button
+                  onClick={() => setIsMultiplayerOpen(true)}
+                  className="btn-ghost rounded-md px-4 py-2.5 text-xs sm:text-sm font-bold flex items-center justify-center gap-2 cursor-pointer w-full sm:w-auto border-[#ffd166] text-[#ffd166] hover:bg-[#ffd166]/15 hover:text-[#ffd166]"
+                >
+                  <span>⚔️</span> PLAY WITH FRIENDS
+                </button>
+              </div>
 
               {isCoarse ? (
                 <p className="text-[8px] sm:text-[10px] text-[#7fae92] tracking-[0.15em] font-semibold">

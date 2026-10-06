@@ -24,6 +24,9 @@ export default defineConfig({
           if (id.includes("node_modules/@vercel/analytics")) {
             return "vendor-analytics";
           }
+          if (id.includes("node_modules/peerjs")) {
+            return "vendor-peer";
+          }
         },
       },
     },
