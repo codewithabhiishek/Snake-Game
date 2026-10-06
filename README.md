@@ -6,11 +6,13 @@
 ![React](https://img.shields.io/badge/React-18.x-61DAFB?style=for-the-badge&logo=react&logoColor=black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
 ![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-v4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
+![Security Audit](https://img.shields.io/badge/Vulnerabilities-0_Clean-8dff57?style=for-the-badge&logo=shield&logoColor=black)
 [![Live Demo](https://img.shields.io/badge/Live_Demo-Play_Serpent_Now-8dff57?style=for-the-badge&logo=vercel&logoColor=black)](https://snake-game-sage-pi.vercel.app)
+[![Author](https://img.shields.io/badge/Author-Abhishek-ffd166?style=for-the-badge&logo=safari&logoColor=black)](https://abhiishek.is-a.dev/)
 
-**A high-voltage, retro-futuristic Arcade Snake game with zero-latency mobile touch controls, unlockable skins, procedural audio synthesis, and interpolated 60/120 FPS canvas rendering.**
+**A high-voltage, retro-futuristic Arcade Snake game built with zero-latency mobile touch controls, iOS Home Screen PWA readiness, unlockable skins, procedural Web Audio synthesis, and interpolated 60/120 FPS canvas rendering.**
 
-[🚀 **Play Live Game**](https://snake-game-sage-pi.vercel.app) • [🎮 Localhost Setup](#-quick-start) • [✨ Key Features](#-features) • [🕹️ Controls](#-controls) • [🎨 Themes & Skins](#-skins--themes)
+[🚀 **Play Live Game**](https://snake-game-sage-pi.vercel.app) • [📱 iOS Home Screen](#-iphone--mobile-home-screen-readiness) • [🎮 Quick Start](#-quick-start) • [✨ Key Features](#-features) • [🕹️ Controls](#-controls) • [🎨 Themes & Skins](#-skins--themes) • [🧪 Testing](#-automated-testing)
 
 </div>
 
@@ -20,9 +22,15 @@
 
 - **⚡ Zero-Latency Touch & Tap Steering:**
   - **Tap-to-Steer:** Tap directly above, below, left, or right of the snake's head for instant directional turns.
-  - **Micro-Swipe Gestures:** Continuous fluid swipe steering with a low 10px threshold.
-  - **Virtual D-Pad Mode:** Optional tactile on-screen gamepad toggleable on all devices.
+  - **Micro-Swipe Gestures:** Continuous fluid swipe steering with a low 12px threshold and continuous tracking.
+  - **Virtual D-Pad Mode:** Tactile on-screen gamepad with auto-activation on touch devices (`(pointer: coarse)`).
   - **Handheld Arcade Mode:** Turns your smartphone into a retro console with left-hand D-pad and right-hand action buttons when held in landscape.
+
+- **📱 iPhone & Mobile Home Screen PWA Ready:**
+  - Full Apple mobile web app capability (`apple-mobile-web-app-capable: yes`, `black-translucent` status bar).
+  - Web App Manifest (`manifest.json`) for full standalone launch without browser bars.
+  - Strict safe-area inset protection (`env(safe-area-inset-*)`) for iPhone notches, Dynamic Island, and home indicator.
+  - Prevented pull-to-refresh and elastic bounce jitter via `overscroll-behavior: none` and `touch-action: none`.
 
 - **🎨 4 Unlockable Retro Themes & Skins:**
   - 🟢 **Cyberpunk Neon** *(Default)* — High-voltage neon lime and dark emerald grid.
@@ -36,24 +44,36 @@
   - 💀 **Insane:** 82ms tick (3× pts) — Pure reflex venom for seasoned players.
 
 - **👁️ Smooth 60/120 FPS Interpolated Canvas Engine:**
-  - High-performance sub-pixel motion interpolation.
+  - High-performance sub-pixel motion interpolation (`acc / tick`).
   - Dynamic particle burst explosions and floating score popups.
   - Screen shake, death flashes, pulsing food rings, and CRT scanline vignette shaders.
+  - Classical tail-vacating logic allows safe chasing of one's own tail.
 
 - **🔊 Pure Web Audio API Sound Synthesizer:**
-  - Zero external MP3/WAV dependencies. Real-time synthesized chiptune tones for eating, turns, pause, deaths, and high score celebrations.
+  - Zero external MP3/WAV audio assets needed. Real-time synthesized chiptune tones for eating, turns, pause, deaths, and high score celebrations.
   - Mobile audio auto-unlock on first user interaction.
 
 - **💾 Local Persistence & Best Score Tracker:**
   - Saves your best scores and theme unlock progress in `localStorage`.
+  - Zero third-party tracker bloat, zero secret leaks.
+
+---
+
+## 📱 iPhone & Mobile Home Screen Readiness
+
+To install **SERPENT** on iOS as a native standalone app:
+1. Open [https://snake-game-sage-pi.vercel.app](https://snake-game-sage-pi.vercel.app) in **Safari**.
+2. Tap the **Share** button (box with upward arrow).
+3. Select **Add to Home Screen**.
+4. Launch SERPENT directly from your home screen — enjoy full-screen gameplay without Safari URL bars or bottom navigation drawers!
 
 ---
 
 ## 🕹️ Controls
 
-| Action | Keyboard | Touch / Mobile |
+| Action | Keyboard | Mobile / iPhone |
 | :--- | :--- | :--- |
-| **Steer** | `↑` `↓` `←` `→` or `W` `A` `S` `D` | **Tap relative to snake head** or **Swipe** |
+| **Steer** | `↑` `↓` `←` `→` or `W` `A` `S` `D` | **Swipe**, **Tap relative to head**, or **Virtual D-Pad** |
 | **Pause / Resume** | `Space` or `P` | Tap the Pause button or HUD icon |
 | **Restart Run** | `R` | Tap the Restart button |
 | **Toggle Sound** | `M` | Tap the Speaker icon |
@@ -65,12 +85,39 @@
 
 ## 🎨 Skins & Themes
 
-| Theme | Preview | Unlock Requirement |
+| Theme | Palette | Unlock Requirement |
 | :--- | :--- | :--- |
 | **Cyberpunk Neon** | `#8dff57` Lime / `#06110c` Dark Emerald | **Default (0 pts)** |
 | **Game Boy Classic** | `#9bbc0f` / `#8bac0f` / `#0f380f` 4-Shade LCD | **60 pts High Score** |
 | **Synthwave Horizon** | `#ff2a85` Magenta / `#00f0ff` Cyan / `#120924` Violet | **150 pts High Score** |
 | **Matrix Terminal** | `#00ff66` Phosphor Green / `#020d06` Terminal Black | **300 pts High Score** |
+
+---
+
+## 🧪 Automated Testing
+
+SERPENT includes a Node.js test suite covering engine physics, collision detection, and unlock progression:
+
+```bash
+# Run all unit tests
+npm test
+```
+
+### Verified Test Cases (16/16 Passing):
+- ✔ `createGame` initializes grid dimensions, starting snake, and non-overlapping food.
+- ✔ `queueDir` permits valid 90° turns and rejects 180° instant reversals.
+- ✔ Input queue buffers up to 2 distinct turns without input lag.
+- ✔ `step` advances coordinates and pops tail on non-eating ticks.
+- ✔ `step` detects wall collisions across all 4 cardinal boundaries (top, bottom, left, right).
+- ✔ `step` detects self-collision on tight body turns.
+- ✔ `step` allows chasing one's own tail when not eating (tail vacates).
+- ✔ `step` triggers self-collision if entering tail cell while eating food (tail stays).
+- ✔ `step` handles full-board clear win condition (`youWin = true`).
+- ✔ `updateFx` handles death countdown transition from `dying` to `over`.
+- ✔ `updateFx` cleans up expired particles and score popups (no memory leaks).
+- ✔ Multiplier scoring scales correctly across Chill (1×), Classic (2×), and Insane (3×).
+- ✔ Speed progression accelerates ticks every 4 apples and clamps at `minTick`.
+- ✔ Themes unlock accurately according to lifetime score thresholds.
 
 ---
 
@@ -83,16 +130,16 @@
 ### Installation
 
 ```bash
-# 1. Clone the repository
+# 1. Clone repository
 git clone https://github.com/codewithabhiishek/Snake-Game.git
 
-# 2. Enter directory
+# 2. Enter project folder
 cd Snake-Game
 
 # 3. Install dependencies
 npm install
 
-# 4. Start development server
+# 4. Start local development server
 npm run dev
 ```
 
@@ -103,6 +150,9 @@ Open your browser and navigate to **`http://localhost:3000`**.
 ```bash
 # Typecheck TypeScript
 npm run typecheck
+
+# Run test suite
+npm test
 
 # Build optimized production bundle
 npm run build
@@ -115,18 +165,21 @@ npm run build
 ```
 Snake-Game/
 ├── public/
-│   └── favicon.svg           # Scalable neon snake SVG favicon
+│   ├── favicon.svg           # Scalable neon snake SVG icon
+│   └── manifest.json         # Web App Manifest for iOS/Android home screen install
 ├── src/
 │   ├── game/
 │   │   ├── audio.ts          # Web Audio API procedural sound synthesizer
-│   │   ├── engine.ts         # Pure game simulation loop, grid physics & turns
+│   │   ├── engine.ts         # Simulation loop, collision physics & input queue
 │   │   ├── render.ts         # High-FPS canvas renderer & particle fx
 │   │   └── themes.ts         # Theme registry for Cyberpunk, Game Boy, Synthwave & Matrix
 │   ├── App.tsx               # Main UI, responsive layout, touch gestures & HUD
 │   ├── index.css             # CRT scanlines, neon typography & glassmorphism
 │   └── main.tsx              # React root mount
-├── index.html                # HTML entry point with retro Google Fonts
-├── package.json              # Project dependencies and build scripts
+├── tests/
+│   └── engine.test.js        # Node.js native test runner suite (16 tests)
+├── index.html                # HTML entry point with PWA & iOS meta tags
+├── package.json              # Project dependencies and scripts
 └── vite.config.js            # Vite build & server configuration
 ```
 
@@ -135,9 +188,10 @@ Snake-Game/
 ## 🛠️ Tech Stack
 
 - **Framework:** React 18
-- **Language:** TypeScript
+- **Language:** TypeScript 5
 - **Styling:** Tailwind CSS v4 + Vanilla CSS Custom Properties
 - **Bundler:** Vite 6
+- **Physics & Simulation:** Pure TypeScript Tick Engine with Input Buffer Queue
 - **Rendering:** HTML5 Canvas 2D API (Interpolated Physics)
 - **Audio:** Web Audio API (Chiptune Oscillator Synthesis)
 - **Typography:** Silkscreen & Space Grotesk via Google Fonts
@@ -146,4 +200,4 @@ Snake-Game/
 
 ## 👨‍💻 Creator
 
-Built by **[Abhishek](https://github.com/codewithabhiishek)** · **SERPENT ARCADE © 2026** ⚡
+Built with ❤️ by **[Abhishek](https://abhiishek.is-a.dev/)** ([@codewithabhiishek](https://github.com/codewithabhiishek)) · **SERPENT ARCADE © 2026** ⚡

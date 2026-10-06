@@ -183,6 +183,7 @@ export default function App() {
   const [isNewBest, setIsNewBest] = useState(false);
   const [youWin, setYouWin] = useState(false);
   const [unlockToast, setUnlockToast] = useState<string | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const sizeRef = useRef(0);
   const dprRef = useRef(1);
@@ -605,7 +606,8 @@ export default function App() {
             );
             if (newlyUnlocked) {
               setUnlockToast(`UNLOCKED: ${newlyUnlocked.name}!`);
-              setTimeout(() => setUnlockToast(null), 5000);
+              if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+              toastTimerRef.current = setTimeout(() => setUnlockToast(null), 5000);
             }
           }
         }
@@ -622,7 +624,10 @@ export default function App() {
       }
     };
     raf = requestAnimationFrame(frame);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    };
   }, []);
 
   /* ------- derived ------- */
@@ -630,7 +635,7 @@ export default function App() {
   const diff = getDiff(difficulty);
   const speedLvl = speedLevel(eaten);
   const inRun = uiStatus === "playing" || uiStatus === "paused" || uiStatus === "dying";
-  const showControls = forceTouchControls ?? false;
+  const showControls = forceTouchControls ?? isCoarse;
 
   return (
     <div
@@ -897,7 +902,7 @@ export default function App() {
                   {isFullscreen ? "MINIMIZE" : "ZOOM (F)"}
                 </button>
                 <div className="text-[7px] text-center text-[#7fae92] opacity-70 leading-tight pt-0.5">
-                  by <span className="text-[#c0ff7a]">Abhishek</span>
+                  by <a href="https://abhiishek.is-a.dev/" target="_blank" rel="noopener noreferrer" className="text-[#c0ff7a] hover:underline font-semibold transition-colors">Abhishek</a>
                 </div>
               </div>
             </div>
@@ -1085,7 +1090,7 @@ export default function App() {
 
           {/* Creator Credit */}
           <div className="mt-2.5 sm:mt-3 text-center text-xs sm:text-[13px] text-[#7fae92] opacity-90 select-none pb-1">
-            Built by <span className="text-[#c0ff7a] font-semibold">Abhishek</span> · <span className="font-display text-[10px] sm:text-[11px] tracking-wider text-[#ffd166]">SERPENT ARCADE © 2026</span>
+            Built by <a href="https://abhiishek.is-a.dev/" target="_blank" rel="noopener noreferrer" className="text-[#c0ff7a] hover:underline font-semibold transition-colors">Abhishek</a> · <span className="font-display text-[10px] sm:text-[11px] tracking-wider text-[#ffd166]">SERPENT ARCADE © 2026</span>
           </div>
         </footer>
       )}
