@@ -86,32 +86,32 @@ export function MultiplayerModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-black/85 backdrop-blur-md overlay-in">
-      <div className="relative w-full max-w-2xl bg-[radial-gradient(ellipse_at_top,_#0d281a,_#05110a_70%)] border-2 border-[#22573d] shadow-[0_0_80px_rgba(47,191,113,0.35),0_30px_60px_rgba(0,0,0,0.9)] rounded-2xl overflow-hidden flex flex-col max-h-[94vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center pt-[max(0.75rem,env(safe-area-inset-top,0px))] pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] pl-[max(0.75rem,env(safe-area-inset-left,0px))] pr-[max(0.75rem,env(safe-area-inset-right,0px))] sm:p-5 bg-black/85 backdrop-blur-md overlay-in">
+      <div className="relative w-full max-w-2xl bg-[radial-gradient(ellipse_at_top,_#0d281a,_#05110a_70%)] border-2 border-[#22573d] shadow-[0_0_80px_rgba(47,191,113,0.35),0_30px_60px_rgba(0,0,0,0.9)] rounded-2xl overflow-hidden flex flex-col max-h-full sm:max-h-[92dvh]">
         {/* Top Header Banner */}
-        <div className="relative flex items-center justify-between px-5 py-4 border-b border-[#1b4931] bg-[rgba(6,20,13,0.9)] shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[radial-gradient(circle,_#1d5939,_#0a2215)] border border-[#348557] flex items-center justify-center shadow-lg shadow-[#8dff57]/10 text-xl shrink-0">
+        <div className="relative flex items-center justify-between gap-2 px-3.5 py-2.5 sm:px-5 sm:py-4 border-b border-[#1b4931] bg-[rgba(6,20,13,0.9)] shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-[radial-gradient(circle,_#1d5939,_#0a2215)] border border-[#348557] flex items-center justify-center shadow-lg shadow-[#8dff57]/10 text-base sm:text-xl shrink-0">
               ⚔️
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="font-display font-bold text-base sm:text-lg text-[#8dff57] tracking-wider leading-none drop-shadow-[0_0_12px_rgba(141,255,87,0.5)]">
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                <h2 className="font-display font-bold text-sm sm:text-lg text-[#8dff57] tracking-wider leading-none drop-shadow-[0_0_12px_rgba(141,255,87,0.5)]">
                   ARENA DUEL
                 </h2>
-                <span className="text-[9px] font-bold tracking-widest px-2 py-0.5 rounded-full bg-[#163825] border border-[#2b6a47] text-[#c0ff7a]">
+                <span className="text-[8px] sm:text-[9px] font-bold tracking-widest px-1.5 sm:px-2 py-0.5 rounded-full bg-[#163825] border border-[#2b6a47] text-[#c0ff7a] whitespace-nowrap">
                   P2P WEBRTC
                 </span>
               </div>
-              <p className="text-[11px] text-[#7fae92] font-medium mt-1">
-                Zero server lag · Real-time 2-player snake battle on one shared board
+              <p className="text-[10px] sm:text-[11px] text-[#7fae92] font-medium mt-0.5 sm:mt-1 truncate">
+                Zero server lag · 2-player snake battle
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="w-9 h-9 rounded-xl flex items-center justify-center text-[#7fae92] hover:text-[#ff5d5d] hover:bg-[#1a0f14] hover:border hover:border-[#ff5d5d]/40 transition-all cursor-pointer text-lg shrink-0"
+            className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl flex items-center justify-center text-[#7fae92] hover:text-[#ff5d5d] hover:bg-[#1a0f14] hover:border hover:border-[#ff5d5d]/40 transition-all cursor-pointer text-base sm:text-lg shrink-0"
             aria-label="Close"
           >
             ✕
@@ -119,41 +119,41 @@ export function MultiplayerModal({
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex p-1.5 bg-[#040f08] border-b border-[#163825] shrink-0">
+        <div className="flex p-1 sm:p-1.5 bg-[#040f08] border-b border-[#163825] shrink-0 gap-1">
           <button
             onClick={() => {
               setTab("create");
               if (!hostRoomCode) onHostRoom(playerName, themeId);
             }}
-            className={`flex-1 py-2 rounded-lg text-xs font-display font-bold tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 ${
+            className={`flex-1 py-1.5 sm:py-2 px-2 rounded-lg text-[10px] sm:text-xs font-display font-bold tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap ${
               tab === "create"
                 ? "bg-[#143d27] text-[#c0ff7a] border border-[#2fbf71]/50 shadow-[0_0_16px_rgba(47,191,113,0.25)]"
                 : "text-[#7fae92] hover:text-[#d8ffe9] hover:bg-[#081a10]"
             }`}
           >
-            <span>👑</span> HOST DUEL (CREATE)
+            <span>👑</span> HOST DUEL
           </button>
           <button
             onClick={() => setTab("join")}
-            className={`flex-1 py-2 rounded-lg text-xs font-display font-bold tracking-wider transition-all cursor-pointer flex items-center justify-center gap-2 ${
+            className={`flex-1 py-1.5 sm:py-2 px-2 rounded-lg text-[10px] sm:text-xs font-display font-bold tracking-wider transition-all cursor-pointer flex items-center justify-center gap-1.5 sm:gap-2 whitespace-nowrap ${
               tab === "join"
                 ? "bg-[#143d27] text-[#c0ff7a] border border-[#2fbf71]/50 shadow-[0_0_16px_rgba(47,191,113,0.25)]"
                 : "text-[#7fae92] hover:text-[#d8ffe9] hover:bg-[#081a10]"
             }`}
           >
-            <span>🎮</span> ENTER DUEL (JOIN)
+            <span>🎮</span> JOIN DUEL
           </button>
         </div>
 
         {/* Scrollable Content Area */}
-        <div className="p-4 sm:p-6 overflow-y-auto neon-scrollbar flex-1 flex flex-col gap-5 text-xs">
+        <div className="p-3 sm:p-6 overflow-y-auto neon-scrollbar flex-1 flex flex-col gap-3 sm:gap-5 text-xs">
           {/* Gamer Tag Input */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 p-3 rounded-xl bg-[rgba(10,31,20,0.6)] border border-[#1d4c33]">
-            <div className="flex items-center gap-2.5">
-              <span className="text-base">🏷️</span>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 p-2.5 sm:p-3 rounded-xl bg-[rgba(10,31,20,0.6)] border border-[#1d4c33]">
+            <div className="flex items-center gap-2">
+              <span className="text-sm sm:text-base">🏷️</span>
               <div>
-                <div className="text-[10px] uppercase tracking-wider font-semibold text-[#7fae92]">Your Gamer Tag</div>
-                <div className="text-xs text-[#d8ffe9] font-medium">Visible to your opponent in the match HUD</div>
+                <div className="text-[9px] sm:text-[10px] uppercase tracking-wider font-semibold text-[#7fae92]">Your Gamer Tag</div>
+                <div className="text-[11px] sm:text-xs text-[#d8ffe9] font-medium">Visible to your opponent in the match HUD</div>
               </div>
             </div>
             <input
@@ -162,50 +162,50 @@ export function MultiplayerModal({
               maxLength={15}
               onChange={(e) => handleNameChange(e.target.value)}
               placeholder="Enter your tag"
-              className="px-3.5 py-1.5 rounded-lg bg-[#07160f] border border-[#256141] text-[#c0ff7a] font-bold text-xs focus:outline-none focus:border-[#8dff57] focus:ring-1 focus:ring-[#8dff57] transition-all sm:w-48 text-center sm:text-left"
+              className="px-3 py-1.5 rounded-lg bg-[#07160f] border border-[#256141] text-[#c0ff7a] font-bold text-xs focus:outline-none focus:border-[#8dff57] focus:ring-1 focus:ring-[#8dff57] transition-all sm:w-48 text-center sm:text-left"
             />
           </div>
 
           {/* CREATE ROOM TAB */}
           {tab === "create" && (
-            <div className="flex flex-col gap-5">
+            <div className="flex flex-col gap-3 sm:gap-5">
               {/* Versus Match Preview Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-5 gap-3 items-center">
+              <div className="grid grid-cols-[1fr_auto_1fr] sm:grid-cols-5 gap-2 sm:gap-3 items-center">
                 {/* Player 1 Card (Host) */}
-                <div className="sm:col-span-2 p-3.5 rounded-xl bg-[radial-gradient(ellipse_at_top,_#123823,_#091c12)] border border-[#2fbf71] shadow-[0_0_20px_rgba(47,191,113,0.15)] flex flex-col items-center text-center">
-                  <div className="w-12 h-12 rounded-xl bg-[#0e291a] border-2 border-[#8dff57] flex items-center justify-center text-xl shadow-[0_0_14px_rgba(141,255,87,0.4)]">
+                <div className="sm:col-span-2 p-2.5 sm:p-3.5 rounded-xl bg-[radial-gradient(ellipse_at_top,_#123823,_#091c12)] border border-[#2fbf71] shadow-[0_0_20px_rgba(47,191,113,0.15)] flex flex-col items-center text-center min-w-0">
+                  <div className="w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-[#0e291a] border-2 border-[#8dff57] flex items-center justify-center text-base sm:text-xl shadow-[0_0_14px_rgba(141,255,87,0.4)]">
                     🐍
                   </div>
-                  <div className="mt-2 text-xs font-bold text-[#c0ff7a] truncate max-w-[140px]">
+                  <div className="mt-1.5 sm:mt-2 text-[11px] sm:text-xs font-bold text-[#c0ff7a] truncate max-w-full">
                     {playerName || "Host"}
                   </div>
-                  <div className="flex items-center gap-1.5 mt-1">
-                    <span className="w-2 h-2 rounded-full bg-[#8dff57] animate-pulse" />
-                    <span className="text-[10px] font-bold text-[#8dff57] tracking-wider uppercase">HOST · P1</span>
+                  <div className="flex items-center gap-1 mt-0.5 sm:mt-1">
+                    <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-[#8dff57] animate-pulse shrink-0" />
+                    <span className="text-[8px] sm:text-[10px] font-bold text-[#8dff57] tracking-wider uppercase whitespace-nowrap">HOST · P1</span>
                   </div>
-                  <span className="text-[9px] text-[#7fae92] mt-0.5 font-medium">Equipped: Neon Lime</span>
+                  <span className="hidden sm:inline text-[9px] text-[#7fae92] mt-0.5 font-medium">Equipped: Neon Lime</span>
                 </div>
 
                 {/* VS Emblem */}
-                <div className="sm:col-span-1 flex flex-col items-center justify-center py-1 sm:py-0">
-                  <div className="w-9 h-9 rounded-full bg-[#181126] border-2 border-[#ffd166] shadow-[0_0_16px_rgba(255,209,102,0.4)] flex items-center justify-center font-display font-bold text-xs text-[#ffd166] tracking-tighter">
+                <div className="sm:col-span-1 flex flex-col items-center justify-center">
+                  <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-full bg-[#181126] border-2 border-[#ffd166] shadow-[0_0_16px_rgba(255,209,102,0.4)] flex items-center justify-center font-display font-bold text-[10px] sm:text-xs text-[#ffd166] tracking-tighter">
                     VS
                   </div>
-                  <span className="text-[8px] font-semibold tracking-widest text-[#7fae92] mt-1 uppercase">
+                  <span className="text-[7px] sm:text-[8px] font-semibold tracking-widest text-[#7fae92] mt-1 uppercase whitespace-nowrap">
                     BEST OF 5
                   </span>
                 </div>
 
                 {/* Player 2 Card (Challenger) */}
                 <div
-                  className={`sm:col-span-2 p-3.5 rounded-xl border flex flex-col items-center text-center transition-all ${
+                  className={`sm:col-span-2 p-2.5 sm:p-3.5 rounded-xl border flex flex-col items-center text-center transition-all min-w-0 ${
                     guestConnected
                       ? "bg-[radial-gradient(ellipse_at_top,_#331024,_#170612)] border-[#ff2a85] shadow-[0_0_25px_rgba(255,42,133,0.25)]"
                       : "bg-[#091811]/60 border-[#1a422d] border-dashed opacity-80"
                   }`}
                 >
                   <div
-                    className={`w-12 h-12 rounded-xl border-2 flex items-center justify-center text-xl transition-all ${
+                    className={`w-9 h-9 sm:w-12 sm:h-12 rounded-xl border-2 flex items-center justify-center text-base sm:text-xl transition-all ${
                       guestConnected
                         ? "bg-[#2b0c1e] border-[#ff2a85] shadow-[0_0_16px_rgba(255,42,133,0.5)]"
                         : "bg-[#07170f] border-[#255238] text-[#7fae92]"
@@ -214,50 +214,50 @@ export function MultiplayerModal({
                     {guestConnected ? "🐉" : "⏳"}
                   </div>
                   <div
-                    className={`mt-2 text-xs font-bold truncate max-w-[140px] ${
+                    className={`mt-1.5 sm:mt-2 text-[11px] sm:text-xs font-bold truncate max-w-full ${
                       guestConnected ? "text-[#ff70a6]" : "text-[#7fae92]"
                     }`}
                   >
-                    {guestConnected ? guestName || "Challenger" : "Waiting for friend..."}
+                    {guestConnected ? guestName || "Challenger" : "Waiting..."}
                   </div>
-                  <div className="flex items-center gap-1.5 mt-1">
+                  <div className="flex items-center gap-1 mt-0.5 sm:mt-1">
                     <span
-                      className={`w-2 h-2 rounded-full ${
+                      className={`w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full shrink-0 ${
                         guestConnected ? "bg-[#ff2a85] animate-pulse" : "bg-[#ffd166] opacity-60"
                       }`}
                     />
                     <span
-                      className={`text-[10px] font-bold tracking-wider uppercase ${
+                      className={`text-[8px] sm:text-[10px] font-bold tracking-wider uppercase whitespace-nowrap ${
                         guestConnected ? "text-[#ff70a6]" : "text-[#ffd166]"
                       }`}
                     >
-                      {guestConnected ? "CHALLENGER · P2" : "INVITE REQUIRED"}
+                      {guestConnected ? "P2 READY" : "INVITE"}
                     </span>
                   </div>
-                  <span className="text-[9px] text-[#7fae92] mt-0.5 font-medium">
+                  <span className="hidden sm:inline text-[9px] text-[#7fae92] mt-0.5 font-medium">
                     {guestConnected ? "Equipped: Hot Pink" : "Share room to connect"}
                   </span>
                 </div>
               </div>
 
               {/* Share & Invite Section */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-xl bg-[rgba(8,23,15,0.7)] border border-[#1d4c33]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 p-3 sm:p-4 rounded-xl bg-[rgba(8,23,15,0.7)] border border-[#1d4c33]">
                 {/* Room Code Column */}
-                <div className="flex flex-col justify-between gap-3">
+                <div className="flex flex-col justify-between gap-2.5 sm:gap-3">
                   <div>
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] tracking-[0.2em] text-[#7fae92] font-bold uppercase">
+                      <span className="text-[9px] sm:text-[10px] tracking-[0.2em] text-[#7fae92] font-bold uppercase">
                         4-Letter Room Code
                       </span>
                       <span className="text-[9px] text-[#c0ff7a] font-semibold">Active & Listening</span>
                     </div>
 
                     {/* Digital LED Code Boxes */}
-                    <div className="flex items-center gap-2 mt-2">
+                    <div className="flex items-center gap-2 mt-1.5 sm:mt-2">
                       {(hostRoomCode || "....").split("").map((char, i) => (
                         <div
                           key={i}
-                          className="flex-1 py-3.5 rounded-lg bg-[#05110a] border border-[#2b6a47] flex items-center justify-center font-display font-bold text-2xl sm:text-3xl text-[#ffd166] shadow-[inset_0_2px_8px_rgba(0,0,0,0.8),0_0_12px_rgba(255,209,102,0.15)]"
+                          className="flex-1 py-2.5 sm:py-3.5 rounded-lg bg-[#05110a] border border-[#2b6a47] flex items-center justify-center font-display font-bold text-xl sm:text-3xl text-[#ffd166] shadow-[inset_0_2px_8px_rgba(0,0,0,0.8),0_0_12px_rgba(255,209,102,0.15)]"
                         >
                           {char}
                         </div>
