@@ -206,6 +206,13 @@ export default function App() {
   const activeTheme = getTheme(themeId);
   themeRef.current = themeId;
 
+  useEffect(() => {
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) {
+      meta.setAttribute("content", activeTheme.ui.pitBg);
+    }
+  }, [activeTheme.ui.pitBg]);
+
   // Maximum lifetime best score across all difficulties to check unlocks
   const maxLifetimeScore = Math.max(loadBest("chill"), loadBest("classic"), loadBest("insane"), best);
 
@@ -906,6 +913,14 @@ export default function App() {
       <div className="pointer-events-none absolute inset-0 ambient-grid" />
       <div className="pointer-events-none absolute inset-0 scanlines opacity-50 z-50" />
       <div className="pointer-events-none absolute inset-0 crt-vignette z-40" />
+      {/* Solid top safe-area cap so glow/scanlines/vignette never blur behind the iPhone status bar */}
+      <div
+        className="pointer-events-none fixed inset-x-0 top-0 z-[55]"
+        style={{
+          height: "env(safe-area-inset-top, 0px)",
+          backgroundColor: activeTheme.ui.pitBg,
+        }}
+      />
 
       {/* Unlock Toast */}
       {unlockToast && (
@@ -917,7 +932,7 @@ export default function App() {
 
       {/* ---------- HUD ---------- */}
       {!isLandscapeMobile && (
-        <header className="relative z-20 shrink-0 flex items-center justify-between gap-2 sm:gap-3 px-3.5 sm:px-6 pt-4 sm:pt-3.5 pb-2">
+        <header className="relative z-20 shrink-0 flex items-center justify-between gap-2 sm:gap-3 px-3.5 sm:px-6 pt-5 sm:pt-4 pb-2">
           {gameMode === "duel" ? (
             <div className="flex items-center justify-between w-full">
               {/* P1 Host Info */}
