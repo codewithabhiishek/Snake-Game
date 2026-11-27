@@ -409,6 +409,17 @@ export default function App() {
         }
       });
 
+      link.onDisconnect(() => {
+        setConnectionError("Host disconnected from the match.");
+        setIsMultiplayerOpen(true);
+        setGameMode("solo");
+        gameModeRef.current = "solo";
+        setMyRole(null);
+        myRoleRef.current = null;
+        setDuelState(null);
+        duelStateRef.current = null;
+      });
+
       link.send({ type: "join", name: name || "Player 2", themeId: pThemeId });
     } catch (err: unknown) {
       setConnectionError(err instanceof Error ? err.message : "Failed to connect to room.");
@@ -934,16 +945,20 @@ export default function App() {
       {!isLandscapeMobile && (
         <header className="relative z-20 shrink-0 flex items-center justify-between gap-2 sm:gap-3 px-3.5 sm:px-6 pt-5 sm:pt-4 pb-2">
           {gameMode === "duel" ? (
-            <div className="flex items-center justify-between w-full">
+            <div className="flex items-center justify-between gap-1.5 sm:gap-3 w-full min-w-0">
               {/* P1 Host Info */}
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-[#8dff57] shadow-[0_0_8px_#8dff57]" />
-                <div className="flex flex-col">
-                  <span className="font-bold text-xs text-[#8dff57] truncate max-w-[90px] sm:max-w-[130px]">
-                    {duelPlayers[0]?.name || "P1 (Host)"}
+              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                <span className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-[#8dff57] shadow-[0_0_8px_#8dff57] shrink-0" />
+                <div className="flex flex-col min-w-0">
+                  <span className="font-bold text-[11px] sm:text-xs text-[#8dff57] truncate max-w-[68px] sm:max-w-[130px]">
+                    {duelPlayers[0]?.name || "P1"}
                   </span>
-                  <div className="flex items-center gap-1 text-[10px]">
-                    <span className="text-[#ffd166] font-display font-bold">WINS: {duelState?.wins.p1 || 0}</span>
+                  <div className="flex items-center gap-1 text-[9px] sm:text-[10px] whitespace-nowrap">
+                    <span className="text-[#ffd166] font-display font-bold">
+                      <span className="hidden sm:inline">WINS: </span>
+                      <span className="sm:hidden">W:</span>
+                      {duelState?.wins.p1 || 0}
+                    </span>
                     <span className="opacity-40">·</span>
                     <span className="text-[#7fae92]">🍎 {duelState?.snakes.p1.applesEaten || 0}</span>
                   </div>
@@ -951,34 +966,39 @@ export default function App() {
               </div>
 
               {/* Center Match Status */}
-              <div className="flex flex-col items-center">
-                <span className="font-display font-bold text-xs sm:text-sm text-[#ffd166] tracking-widest">
-                  ROUND {duelState?.round || 1}
+              <div className="flex flex-col items-center shrink-0">
+                <span className="font-display font-bold text-[11px] sm:text-sm text-[#ffd166] tracking-wider sm:tracking-widest whitespace-nowrap">
+                  R{duelState?.round || 1}
+                  <span className="hidden sm:inline"> / BO{((duelState?.targetWins || 3) * 2) - 1}</span>
                 </span>
-                <span className="text-[8px] text-[#7fae92] uppercase tracking-wider font-semibold">
+                <span className="text-[8px] text-[#7fae92] uppercase tracking-wider font-semibold hidden sm:inline">
                   BEST OF {((duelState?.targetWins || 3) * 2) - 1}
                 </span>
               </div>
 
               {/* P2 Guest Info */}
-              <div className="flex items-center gap-2">
-                <div className="flex flex-col items-end">
-                  <span className="font-bold text-xs text-[#ff2a85] truncate max-w-[90px] sm:max-w-[130px]">
-                    {duelPlayers[1]?.name || "P2 (Guest)"}
+              <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                <div className="flex flex-col items-end min-w-0">
+                  <span className="font-bold text-[11px] sm:text-xs text-[#ff2a85] truncate max-w-[68px] sm:max-w-[130px]">
+                    {duelPlayers[1]?.name || "P2"}
                   </span>
-                  <div className="flex items-center gap-1 text-[10px]">
+                  <div className="flex items-center gap-1 text-[9px] sm:text-[10px] whitespace-nowrap">
                     <span className="text-[#7fae92]">🍎 {duelState?.snakes.p2.applesEaten || 0}</span>
                     <span className="opacity-40">·</span>
-                    <span className="text-[#ffd166] font-display font-bold">WINS: {duelState?.wins.p2 || 0}</span>
+                    <span className="text-[#ffd166] font-display font-bold">
+                      <span className="hidden sm:inline">WINS: </span>
+                      <span className="sm:hidden">W:</span>
+                      {duelState?.wins.p2 || 0}
+                    </span>
                   </div>
                 </div>
-                <span className="w-3 h-3 rounded-full bg-[#ff2a85] shadow-[0_0_8px_#ff2a85]" />
+                <span className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-[#ff2a85] shadow-[0_0_8px_#ff2a85] shrink-0" />
               </div>
 
               {/* Exit Duel button */}
               <button
                 onClick={handleExitDuel}
-                className="btn-ghost rounded px-2.5 py-1 text-[10px] text-[#ff5d5d] hover:bg-[#ff5d5d]/10 ml-2 cursor-pointer"
+                className="btn-ghost rounded px-2 sm:px-2.5 py-1 text-[9px] sm:text-[10px] text-[#ff5d5d] hover:bg-[#ff5d5d]/10 shrink-0 cursor-pointer"
                 title="Exit 1v1 Duel to Solo Menu"
               >
                 LEAVE

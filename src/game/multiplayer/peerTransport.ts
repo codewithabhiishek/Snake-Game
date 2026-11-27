@@ -111,6 +111,16 @@ export class DuelHostBridge {
         conn.on("error", drop);
       });
 
+      this.peer.on("disconnected", () => {
+        if (!this.closed) {
+          try {
+            this.peer?.reconnect();
+          } catch {
+            /* ignore */
+          }
+        }
+      });
+
       this.peer.on("error", (err) => {
         if ((err as { type?: string }).type === "unavailable-id" && !this.closed) {
           try {
@@ -220,6 +230,7 @@ export class DuelHostBridge {
 export interface DuelGuestLink {
   send: (msg: ClientDuelMsg) => void;
   onMessage: (cb: (msg: HostDuelMsg) => void) => () => void;
+  onDisconnect: (cb: () => void) => () => void;
   close: () => void;
 }
 
@@ -228,10 +239,16 @@ export interface DuelGuestLink {
  */
 export function tryDuelGuestLink(roomCode: string, timeoutMs = 10000): Promise<DuelGuestLink> {
   return new Promise((resolve, reject) => {
-    const targetId = peerIdForDuel(roomCode);
+    const cleanCode = roomCode.trim().toUpperCase();
+    if (cleanCode.length !== 4) {
+      reject(new Error("Please enter a valid 4-letter room code."));
+      return;
+    }
+    const targetId = peerIdForDuel(cleanCode);
     let settled = false;
     let peer: Peer | null = null;
     let conn: DataConnection | null = null;
+    let manuallyClosed = false;
 
     const timer = setTimeout(() => {
       if (!settled) {
@@ -247,6 +264,7 @@ export function tryDuelGuestLink(roomCode: string, timeoutMs = 10000): Promise<D
     }, timeoutMs);
 
     const listeners = new Set<(msg: HostDuelMsg) => void>();
+    const disconnectListeners = new Set<() => void>();
 
     const link: DuelGuestLink = {
       send: (msg: ClientDuelMsg) => {
@@ -262,7 +280,12 @@ export function tryDuelGuestLink(roomCode: string, timeoutMs = 10000): Promise<D
         listeners.add(cb);
         return () => listeners.delete(cb);
       },
+      onDisconnect: (cb: () => void) => {
+        disconnectListeners.add(cb);
+        return () => disconnectListeners.delete(cb);
+      },
       close: () => {
+        manuallyClosed = true;
         clearTimeout(timer);
         try {
           conn?.close();
@@ -306,6 +329,8 @@ export function tryDuelGuestLink(roomCode: string, timeoutMs = 10000): Promise<D
             settled = true;
             clearTimeout(timer);
             reject(new Error("Host closed the room."));
+          } else if (!manuallyClosed) {
+            disconnectListeners.forEach((cb) => cb());
           }
         });
 
@@ -314,6 +339,8 @@ export function tryDuelGuestLink(roomCode: string, timeoutMs = 10000): Promise<D
             settled = true;
             clearTimeout(timer);
             reject(err);
+          } else if (!manuallyClosed) {
+            disconnectListeners.forEach((cb) => cb());
           }
         });
       } catch (err) {
@@ -326,7 +353,12 @@ export function tryDuelGuestLink(roomCode: string, timeoutMs = 10000): Promise<D
       if (!settled) {
         settled = true;
         clearTimeout(timer);
-        reject(err);
+        const type = (err as { type?: string }).type;
+        if (type === "peer-unavailable") {
+          reject(new Error("Room not found. Check the 4-letter code and ensure host is live."));
+        } else {
+          reject(err);
+        }
       }
     });
   });
