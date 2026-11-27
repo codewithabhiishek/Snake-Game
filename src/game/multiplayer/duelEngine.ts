@@ -212,7 +212,7 @@ export class DuelEngine {
 
     if (this.state.status === "countdown") {
       this.roundTimer += dt;
-      if (this.roundTimer >= 0.85) {
+      if (this.roundTimer >= 0.65) {
         this.roundTimer = 0;
         this.state.countdown -= 1;
         if (this.state.countdown <= 0) {
@@ -228,7 +228,7 @@ export class DuelEngine {
 
     if (this.state.status === "round_over") {
       this.roundTimer += dt;
-      if (this.roundTimer >= 2.2) {
+      if (this.roundTimer >= 1.4) {
         this.roundTimer = 0;
         this.state.round += 1;
         this.startCountdown();

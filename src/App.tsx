@@ -1496,16 +1496,47 @@ export default function App() {
               <span className="font-bold text-[#ffd166]">{matchWinnerName}</span> claims the championship!
             </p>
 
-            <div className="flex items-center gap-4 px-4 py-2.5 rounded-xl bg-[#06140c] border border-[#1d4c33] text-xs my-1 shadow-lg">
-              <div className="flex items-center gap-1.5 font-bold text-[#8dff57]">
-                <span>{duelPlayers[0]?.name || "P1"}</span>
-                <span className="font-display text-sm">{duelState.wins.p1}</span>
-              </div>
-              <span className="text-[#7fae92] font-display opacity-40">VS</span>
-              <div className="flex items-center gap-1.5 font-bold text-[#ff2a85]">
-                <span className="font-display text-sm">{duelState.wins.p2}</span>
-                <span>{duelPlayers[1]?.name || "P2"}</span>
-              </div>
+            <div className="w-full max-w-xs flex flex-col gap-1.5 my-1">
+              {[
+                {
+                  id: "p1" as const,
+                  name: duelPlayers[0]?.name || "P1",
+                  wins: duelState.wins.p1,
+                  apples: duelState.snakes.p1.applesEaten,
+                  color: "#8dff57",
+                },
+                {
+                  id: "p2" as const,
+                  name: duelPlayers[1]?.name || "P2",
+                  wins: duelState.wins.p2,
+                  apples: duelState.snakes.p2.applesEaten,
+                  color: "#ff2a85",
+                },
+              ]
+                .sort((a, b) => b.wins - a.wins || b.apples - a.apples)
+                .map((row, idx) => (
+                  <div
+                    key={row.id}
+                    className="flex items-center justify-between px-3 py-2 rounded-lg bg-[#06140c] border border-[#1d4c33] text-xs"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span
+                        className={`w-5 h-5 rounded flex items-center justify-center font-display text-[10px] font-bold shrink-0 ${
+                          idx === 0 ? "bg-[#ffd166] text-[#06140c]" : "bg-[#143322] text-[#7fae92]"
+                        }`}
+                      >
+                        #{idx + 1}
+                      </span>
+                      <span className="font-bold truncate" style={{ color: row.color }}>
+                        {row.name}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2.5 shrink-0 font-display">
+                      <span className="text-[10px] text-[#7fae92]">🍎 {row.apples}</span>
+                      <span className="text-sm text-[#ffd166]">{row.wins}W</span>
+                    </div>
+                  </div>
+                ))}
             </div>
 
             <div className="flex items-center gap-3 mt-2">
