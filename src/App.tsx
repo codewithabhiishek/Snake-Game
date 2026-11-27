@@ -862,7 +862,7 @@ export default function App() {
 
       {/* Unlock Toast */}
       {unlockToast && (
-        <div className="absolute top-3 left-1/2 -translate-x-1/2 z-50 badge-wiggle bg-[rgba(255,209,102,0.95)] text-[#062513] font-display font-bold text-xs sm:text-sm px-4 py-2 rounded-full shadow-2xl flex items-center gap-2 border border-[#ffd166]">
+        <div className="absolute top-[max(1rem,calc(env(safe-area-inset-top,0px)+0.5rem))] left-1/2 -translate-x-1/2 z-50 badge-wiggle bg-[rgba(255,209,102,0.95)] text-[#062513] font-display font-bold text-xs sm:text-sm px-4 py-2 rounded-full shadow-2xl flex items-center gap-2 border border-[#ffd166]">
           <IconTrophy className="w-4 h-4" />
           <span>{unlockToast}</span>
         </div>
@@ -870,7 +870,7 @@ export default function App() {
 
       {/* ---------- HUD ---------- */}
       {!isLandscapeMobile && (
-        <header className="relative z-20 shrink-0 flex items-center justify-between gap-1 sm:gap-3 px-2.5 sm:px-6 pt-2 sm:pt-3 pb-1.5 sm:pb-2">
+        <header className="relative z-20 shrink-0 flex items-center justify-between gap-2 sm:gap-3 px-3.5 sm:px-6 pt-4 sm:pt-3.5 pb-2">
           {gameMode === "duel" ? (
             <div className="flex items-center justify-between w-full">
               {/* P1 Host Info */}
@@ -924,9 +924,9 @@ export default function App() {
             </div>
           ) : (
             <>
-              <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0">
                 <SnakeMark className="w-6 h-6 sm:w-8 sm:h-8 md:w-9 md:h-9 shrink-0" color={activeTheme.palette.accent} />
-                <div className="hidden xs:block min-w-0">
+                <div className="hidden sm:block min-w-0">
                   <div
                     className="font-display font-bold text-xs sm:text-base md:text-lg leading-none truncate"
                     style={{ color: activeTheme.palette.accentHot, textShadow: `0 0 12px ${activeTheme.palette.accentGlow}` }}
@@ -938,7 +938,7 @@ export default function App() {
                   </div>
                 </div>
                 <span
-                  className="font-display text-[8px] sm:text-[10px] px-1.5 sm:px-2 py-0.5 sm:py-1 rounded border bg-[rgba(12,33,23,0.85)] shrink-0"
+                  className="font-display text-[9px] sm:text-[10px] px-2 py-0.5 sm:py-1 rounded border bg-[rgba(12,33,23,0.85)] shrink-0"
                   style={{ borderColor: `${diff.hue}66`, color: diff.hue }}
                   title={diff.tagline}
                 >
@@ -946,7 +946,7 @@ export default function App() {
                 </span>
               </div>
 
-          <div className="flex items-center gap-1 sm:gap-2 md:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3">
             {/* speed meter (desktop/tablet) */}
             <div className="hidden md:flex flex-col items-end gap-1 mr-1">
               <span className="text-[9px] tracking-[0.25em] text-[#7fae92] font-semibold">SPEED</span>
@@ -1019,7 +1019,7 @@ export default function App() {
             </button>
             <button
               onClick={toggleFullscreen}
-              className="btn-ghost rounded-md w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 flex items-center justify-center shrink-0"
+              className="hidden sm:flex btn-ghost rounded-md w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 items-center justify-center shrink-0"
               style={{ color: activeTheme.palette.accent }}
               aria-label={isFullscreen ? "Exit Zoom (F)" : "Zoom Fullscreen (F)"}
               title={isFullscreen ? "Exit Fullscreen (F)" : "Zoom Fullscreen (F)"}
