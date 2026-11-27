@@ -551,63 +551,85 @@ export default function App() {
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    let startX = 0;
-    let startY = 0;
+    let activeTouchId: number | null = null;
+    let anchorX = 0;
+    let anchorY = 0;
+    let tapStartX = 0;
+    let tapStartY = 0;
     let startTime = 0;
     let hasSwiped = false;
+    let lastSwipeDir: Dir | null = null;
+
+    const isActivelyPlaying = () =>
+      gameRef.current.status === "playing" || gameModeRef.current === "duel";
+
+    const findActiveTouch = (list: TouchList): Touch | undefined => {
+      if (activeTouchId === null) return list[0];
+      for (let i = 0; i < list.length; i++) {
+        if (list[i].identifier === activeTouchId) return list[i];
+      }
+      return undefined;
+    };
 
     const onStart = (e: TouchEvent) => {
       sfx.unlock();
-      if (gameRef.current.status === "playing" && e.cancelable) {
+      if (isActivelyPlaying() && e.cancelable) {
         e.preventDefault();
       }
-      const t = e.touches[0];
-      startX = t.clientX;
-      startY = t.clientY;
+      const t = e.changedTouches[0] ?? e.touches[0];
+      if (!t) return;
+      activeTouchId = t.identifier;
+      anchorX = t.clientX;
+      anchorY = t.clientY;
+      tapStartX = t.clientX;
+      tapStartY = t.clientY;
       startTime = performance.now();
       hasSwiped = false;
+      lastSwipeDir = null;
     };
 
     const onMove = (e: TouchEvent) => {
-      if (e.touches.length === 0) return;
-      if (gameRef.current.status === "playing" && e.cancelable) {
+      const t = findActiveTouch(e.touches);
+      if (!t) return;
+      if (isActivelyPlaying() && e.cancelable) {
         e.preventDefault();
       }
-      const t = e.touches[0];
-      const dx = t.clientX - startX;
-      const dy = t.clientY - startY;
+
+      const dx = t.clientX - anchorX;
+      const dy = t.clientY - anchorY;
       const absX = Math.abs(dx);
       const absY = Math.abs(dy);
 
-      // 12px threshold for instantaneous, accurate directional swipe
-      if (absX < 12 && absY < 12) return;
+      // Fast 10px threshold for the first turn; slightly higher + axis-locked for continuous mid-swipe turns
+      const threshold = hasSwiped ? 24 : 10;
+      const dominant = Math.max(absX, absY);
+      const minor = Math.min(absX, absY);
+      if (dominant < threshold) return;
+      if (hasSwiped && dominant < minor * 1.35) return;
 
-      if (absY > absX) {
-        // Pure vertical swipe
-        if (dy < 0) {
-          api.current.steer("up");
-        } else {
-          api.current.steer("down");
-        }
-      } else {
-        // Pure horizontal swipe
-        if (dx < 0) {
-          api.current.steer("left");
-        } else {
-          api.current.steer("right");
-        }
-      }
+      const nextDir: Dir =
+        absY > absX ? (dy < 0 ? "up" : "down") : dx < 0 ? "left" : "right";
 
-      // Continuous tracking so you can snake-turn smoothly across the screen
-      startX = t.clientX;
-      startY = t.clientY;
+      // Advance anchor so bends/90-degree turns register immediately from the fingertip
+      anchorX = t.clientX;
+      anchorY = t.clientY;
       hasSwiped = true;
+
+      if (nextDir !== lastSwipeDir) {
+        lastSwipeDir = nextDir;
+        api.current.steer(nextDir);
+      }
     };
 
     const onEnd = (e: TouchEvent) => {
-      if (gameRef.current.status === "playing" && e.cancelable) {
+      const ended = findActiveTouch(e.changedTouches);
+      if (!ended) return;
+
+      if (isActivelyPlaying() && e.cancelable) {
         e.preventDefault();
       }
+      activeTouchId = null;
+
       // If player tapped intentionally without dragging (quick tap < 280ms)
       if (!hasSwiped && performance.now() - startTime < 280) {
         const g = gameRef.current;
@@ -619,8 +641,8 @@ export default function App() {
             const headPxX = r.left + ((head.x + 0.5) / g.cols) * r.width;
             const headPxY = r.top + ((head.y + 0.5) / g.rows) * r.height;
 
-            const tdx = startX - headPxX;
-            const tdy = startY - headPxY;
+            const tdx = tapStartX - headPxX;
+            const tdy = tapStartY - headPxY;
 
             if (g.dir === "left" || g.dir === "right") {
               api.current.steer(tdy > 0 ? "down" : "up");
@@ -638,15 +660,23 @@ export default function App() {
       }
     };
 
+    const onCancel = () => {
+      activeTouchId = null;
+      hasSwiped = false;
+      lastSwipeDir = null;
+    };
+
     el.addEventListener("touchstart", onStart, { passive: false });
     el.addEventListener("touchmove", onMove, { passive: false });
     el.addEventListener("touchend", onEnd, { passive: false });
+    el.addEventListener("touchcancel", onCancel, { passive: true });
     return () => {
       el.removeEventListener("touchstart", onStart);
       el.removeEventListener("touchmove", onMove);
       el.removeEventListener("touchend", onEnd);
+      el.removeEventListener("touchcancel", onCancel);
     };
-  }, []);
+  }, [isLandscapeMobile]);
 
   /* ------- board sizing and responsive checks ------- */
 
@@ -1098,7 +1128,7 @@ export default function App() {
             </div>
 
             {/* Center Board */}
-            <div ref={containerRef} className="flex-1 h-full flex items-center justify-center min-w-0">
+            <div ref={containerRef} className="flex-1 h-full flex items-center justify-center min-w-0 touch-none">
               <div
                 className="board-frame relative rounded-lg"
                 style={{ width: boardSize || 220, height: boardSize || 220, borderColor: activeTheme.ui.borderColor }}
@@ -1173,7 +1203,7 @@ export default function App() {
           </div>
         ) : (
           /* Standard / Portrait Mode */
-          <div ref={containerRef} className="w-full h-full max-w-[760px] mx-auto flex items-center justify-center">
+          <div ref={containerRef} className="w-full h-full max-w-[760px] mx-auto flex items-center justify-center touch-none">
             <div
               className="board-frame relative rounded-lg"
               style={{ width: boardSize || 280, height: boardSize || 280, borderColor: activeTheme.ui.borderColor }}
