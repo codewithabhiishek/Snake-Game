@@ -225,10 +225,14 @@ export default function App() {
   const duelEngineRef = useRef<DuelEngine | null>(null);
   const duelHostBridgeRef = useRef<DuelHostBridge | null>(null);
   const duelGuestLinkRef = useRef<DuelGuestLink | null>(null);
+  const duelStateRef = useRef<DuelGameState | null>(null);
+  const duelPlayersRef = useRef<RoomPlayer[]>([]);
   const gameModeRef = useRef<"solo" | "duel">("solo");
   const myRoleRef = useRef<"host" | "guest" | null>(null);
   gameModeRef.current = gameMode;
   myRoleRef.current = myRole;
+  duelStateRef.current = duelState;
+  duelPlayersRef.current = duelPlayers;
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -333,8 +337,12 @@ export default function App() {
 
     const engine = new DuelEngine(hostPlayer, undefined, {
       onStateChange: (st, pl) => {
-        setDuelState({ ...st });
-        setDuelPlayers([...pl]);
+        const nextState = { ...st };
+        const nextPlayers = [...pl];
+        duelStateRef.current = nextState;
+        duelPlayersRef.current = nextPlayers;
+        setDuelState(nextState);
+        setDuelPlayers(nextPlayers);
         const guest = pl.find((p) => p.id === "p2");
         setGuestConnected(guest?.connected ?? false);
         setGuestName(guest?.name ?? "");
@@ -379,18 +387,22 @@ export default function App() {
       gameModeRef.current = "duel";
       setIsMultiplayerOpen(false);
 
-      link.send({ type: "join", name: name || "Player 2", themeId: pThemeId });
-
       link.onMessage((msg) => {
         if (msg.type === "state_sync") {
-          setDuelState({ ...msg.state });
-          setDuelPlayers([...msg.players]);
+          const nextState = { ...msg.state };
+          const nextPlayers = [...msg.players];
+          duelStateRef.current = nextState;
+          duelPlayersRef.current = nextPlayers;
+          setDuelState(nextState);
+          setDuelPlayers(nextPlayers);
         } else if (msg.type === "sfx") {
           sfx.play(msg.name);
         } else if (msg.type === "player_left") {
           setConnectionError("Host disconnected.");
         }
       });
+
+      link.send({ type: "join", name: name || "Player 2", themeId: pThemeId });
     } catch (err: unknown) {
       setConnectionError(err instanceof Error ? err.message : "Failed to connect to room.");
     } finally {
@@ -409,11 +421,14 @@ export default function App() {
       duelGuestLinkRef.current = null;
     }
     duelEngineRef.current = null;
+    duelStateRef.current = null;
+    duelPlayersRef.current = [];
     setGameMode("solo");
     gameModeRef.current = "solo";
     setMyRole(null);
     myRoleRef.current = null;
     setDuelState(null);
+    setDuelPlayers([]);
     setHostRoomCode(null);
     setGuestConnected(false);
     toMenu();
@@ -770,12 +785,14 @@ export default function App() {
                 getTheme(p1.themeId),
                 getTheme(p2.themeId)
               );
-            } else if (duelState) {
-              const p1 = duelPlayers.find((p) => p.id === "p1");
-              const p2 = duelPlayers.find((p) => p.id === "p2");
+            } else if (duelStateRef.current) {
+              const guestState = duelStateRef.current;
+              const guestPlayers = duelPlayersRef.current;
+              const p1 = guestPlayers.find((p) => p.id === "p1");
+              const p2 = guestPlayers.find((p) => p.id === "p2");
               drawDuel(
                 ctx,
-                duelState,
+                guestState,
                 sizeRef.current,
                 dprRef.current,
                 [],
