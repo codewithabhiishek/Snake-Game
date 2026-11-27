@@ -42,6 +42,16 @@ export function MultiplayerModal({
   const [inputCode, setInputCode] = useState(() => initialRoomCode.toUpperCase().slice(0, 4));
   const [copiedLink, setCopiedLink] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
+  const [qrZoomed, setQrZoomed] = useState(false);
+
+  useEffect(() => {
+    if (!qrZoomed) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setQrZoomed(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [qrZoomed]);
 
   useEffect(() => {
     if (initialRoomCode) {
@@ -283,8 +293,13 @@ export function MultiplayerModal({
                 </div>
 
                 {/* QR Code Column */}
-                <div className="flex flex-col items-center justify-center p-3.5 rounded-xl bg-[#06140c] border border-[#19422c] text-center">
-                  <div className="p-2.5 bg-white rounded-xl shadow-xl shadow-black/60 border-2 border-[#2b6a47]">
+                <button
+                  type="button"
+                  onClick={() => setQrZoomed(true)}
+                  className="flex flex-col items-center justify-center p-3.5 rounded-xl bg-[#06140c] border border-[#19422c] hover:border-[#8dff57]/60 text-center cursor-pointer group transition-colors"
+                  title="Tap to enlarge QR code"
+                >
+                  <div className="p-2.5 bg-white rounded-xl shadow-xl shadow-black/60 border-2 border-[#2b6a47] group-hover:scale-[1.03] transition-transform">
                     <QRCodeSVG
                       value={inviteUrl || "https://snake-game-sage-pi.vercel.app"}
                       size={115}
@@ -292,11 +307,11 @@ export function MultiplayerModal({
                       includeMargin={false}
                     />
                   </div>
-                  <div className="mt-2.5 text-[10px] text-[#d8ffe9] font-bold flex items-center gap-1.5">
-                    <span>📱</span> Scan with Phone Camera to Join
+                  <div className="mt-2.5 text-[10px] text-[#d8ffe9] group-hover:text-[#8dff57] font-bold flex items-center gap-1.5 transition-colors">
+                    <span>📱</span> Tap QR to Enlarge &amp; Scan
                   </div>
                   <span className="text-[8px] text-[#7fae92] font-medium">Opens the match directly in Safari / Chrome</span>
-                </div>
+                </button>
               </div>
 
               {/* COMMENCE DUEL CTA BUTTON */}
@@ -366,6 +381,54 @@ export function MultiplayerModal({
           )}
         </div>
       </div>
+
+      {qrZoomed && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/85 backdrop-blur-md p-4"
+          onClick={() => setQrZoomed(false)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Room QR Code"
+        >
+          <div
+            className="relative w-full max-w-sm rounded-2xl border-2 border-[#22573d] bg-[radial-gradient(ellipse_at_top,_#0d281a,_#05110a_70%)] shadow-[0_0_60px_rgba(47,191,113,0.35)] p-5 text-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setQrZoomed(false)}
+              className="absolute top-3 right-3 w-8 h-8 rounded-xl flex items-center justify-center text-[#7fae92] hover:text-[#ff5d5d] hover:bg-[#1a0f14] transition-all cursor-pointer"
+              aria-label="Close QR"
+            >
+              ✕
+            </button>
+            <div className="text-[10px] font-bold tracking-[0.22em] text-[#7fae92] uppercase">
+              SCAN TO JOIN
+            </div>
+            <div className="mt-1 font-display font-bold text-3xl tracking-[0.28em] text-[#ffd166]">
+              {hostRoomCode || "...."}
+            </div>
+            <p className="mt-1 text-[11px] text-[#7fae92]">
+              Point your friend&apos;s camera here to jump in
+            </p>
+            <div className="mt-4 inline-block p-3.5 bg-white rounded-2xl border-2 border-[#2b6a47] shadow-2xl">
+              <QRCodeSVG
+                value={inviteUrl || "https://snake-game-sage-pi.vercel.app"}
+                size={232}
+                level="M"
+                includeMargin={false}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleCopyLink}
+              className="w-full py-2.5 px-3 rounded-xl bg-[#123823] hover:bg-[#1b4d30] border border-[#348759] text-[#8dff57] text-xs font-bold flex items-center justify-center gap-2 transition-all cursor-pointer mt-4"
+            >
+              {copiedLink ? "✓ DIRECT LINK COPIED!" : "🔗 COPY 1-CLICK INVITE LINK"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
